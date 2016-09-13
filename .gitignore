@@ -1,0 +1,8 @@
+*.swo
+*.swp
+*.py[cod]
+__pycache__/
+.ropeproject/
+
+.credentials
+*_creds.json
