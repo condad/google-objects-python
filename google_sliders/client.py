@@ -41,6 +41,17 @@ class Client(object):
         """
         pass
 
+    def get_page(self, presentation, page):
+        """execute page api call and initializes a page
+        with a presentation object
+
+        :presentation: TODO
+        :page: TODO
+        :returns: TODO
+
+        """
+        pass
+
     def get_tags(self):
         """TODO: Docstring for get_tags.
         :returns: TODO
@@ -125,6 +136,14 @@ class Client(object):
         # empty list afterwards
         del self._updates[:]
 
+    def create(self, title):
+        """TODO: Docstring for create.
+
+        :title: TODO
+        :returns: new presentation object
+
+        """
+        pass
 
     def _append_update(self, update):
         self._updates.append(update)
