@@ -1,14 +1,28 @@
+"""
+
+Google Slides API HTTP Resource
+    Tue 13 Sep 22:17:15 2016
+
+"""
+import os
 import re
 import httplib2
 
+from models import Presentation
 from apiclient import discovery
-from oauth2client.service_account import ServiceAccountCredentials
-from oauth2client.client import OAuth2Credentials
 
 
-SCOPES = 'https://www.googleapis.com/auth/drive'
-USER_EMAIL = 'team@xyzfoundation.com'
-API_KEY = 'AIzaSyBe7-2oJUa_Gyl4SdDdPfLRymCKCdeb0zU'
+def _find_credentials(name='xyz_creds.json'):
+    """finds credentials within project
+
+    :name: name of credential file
+    :returns: full path to credentials
+
+    """
+    home_dir = os.path.expanduser('~')
+    credential_dir = os.path.join(home_dir, 'lab/google_sliders/.credentials')
+    credential_path = os.path.join(credential_dir, name)
+    return credential_path
 
 
 class Client(object):
@@ -17,6 +31,9 @@ class Client(object):
     This object wraps the Google API Slides resource
     to provide a cleaner, conciser interface when dealing
     with Google Slides objects.
+
+    Raises exceptions, of which API object related exceptions
+    are handled by its <Presentation> object.
     """
 
     def __init__(self, credentials, api_key):
@@ -27,30 +44,48 @@ class Client(object):
         self._resource = discovery.build('slides', 'v1beta1', http=http,
                                 discoveryServiceUrl=discoveryUrl)
 
-    def open(self, id):
-        """Return Presentation Object"""
-        pass
 
     def get_presentation(self, id):
-        """returns an initialized presentation
-        object
+        """Retrieves an initialized <Presentation>
+        object, passes itself.
 
         :id: Slides Presentation ID
-        :returns: <Presentation> object
+        :returns: <Presentation>
 
         """
-        pass
+        presentation_raw = self._resource.presentations().get(
+            presentationId = id
+        ).execute()
 
-    def get_page(self, presentation, page):
-        """execute page api call and initializes a page
-        with a presentation object
+        return Presentation(self, presentation_raw)
 
-        :presentation: TODO
-        :page: TODO
-        :returns: TODO
+
+    def get_page(self, presentation_id, page_id):
+        """Retrieves an existing presentation
+        and initializes it with and existing
+        <Presentation> object
+
+        :presentation_id: Slides Presentation ID
+        :page: Slides Page ID
+        :returns: <Page>
 
         """
-        pass
+        presentation_raw = self._resource.presentation().get(
+            presentationId = presentation_id,
+            pageObjectId = page_id
+        ).execute()
+
+        return Presentation(self, presentation_raw)
+
+
+    def update(self, updates):
+        self._resource.presentations().batchUpdate(
+            presentationId = self._slide_id,
+            body={
+                'requests': updates
+            }
+        ).execute()
+
 
     def get_tags(self):
         """TODO: Docstring for get_tags.
@@ -69,6 +104,7 @@ class Client(object):
                     tags.add(value)
 
         return tags
+
 
     def _get_values(self, element):
         """Returns text value string list of
@@ -125,25 +161,3 @@ class Client(object):
                 ]
             }
         ).execute()
-
-    def batch_update(self, updates):
-        self._resource.presentations().batchUpdate(
-            presentationId = self._slide_id,
-            body={
-                'requests': updates
-            }
-        ).execute()
-        # empty list afterwards
-        del self._updates[:]
-
-    def create(self, title):
-        """TODO: Docstring for create.
-
-        :title: TODO
-        :returns: new presentation object
-
-        """
-        pass
-
-    def _append_update(self, update):
-        self._updates.append(update)
