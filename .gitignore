@@ -6,3 +6,4 @@ __pycache__/
 
 .credentials
 *_creds.json
+.cache/

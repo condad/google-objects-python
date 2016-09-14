@@ -8,8 +8,9 @@ import os
 import re
 import httplib2
 
-from models import Presentation
+from google_sliders.models import Presentation
 from apiclient import discovery
+from apiclient.errors import HttpError
 
 
 def _find_credentials(name='xyz_creds.json'):
@@ -20,7 +21,7 @@ def _find_credentials(name='xyz_creds.json'):
 
     """
     home_dir = os.path.expanduser('~')
-    credential_dir = os.path.join(home_dir, 'lab/google_sliders/.credentials')
+    credential_dir = os.path.join(home_dir, 'lab/google-sliders/.credentials')
     credential_path = os.path.join(credential_dir, name)
     return credential_path
 
@@ -78,9 +79,10 @@ class Client(object):
         return Presentation(self, presentation_raw)
 
 
-    def update(self, updates):
+    def push_updates(self, presentation_id, updates):
+        print updates
         self._resource.presentations().batchUpdate(
-            presentationId = self._slide_id,
+            presentationId = presentation_id,
             body={
                 'requests': updates
             }
