@@ -4,26 +4,17 @@ Google Slides API HTTP Resource
     Tue 13 Sep 22:17:15 2016
 
 """
-import os
 import re
+import logging
 import httplib2
 
-from google_sliders.models import Presentation
+from google_sliders.models import Presentation, Page
 from apiclient import discovery
 from apiclient.errors import HttpError
 
-
-def _find_credentials(name='xyz_creds.json'):
-    """finds credentials within project
-
-    :name: name of credential file
-    :returns: full path to credentials
-
-    """
-    home_dir = os.path.expanduser('~')
-    credential_dir = os.path.join(home_dir, 'lab/google-sliders/.credentials')
-    credential_path = os.path.join(credential_dir, name)
-    return credential_path
+logging.basicConfig()
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
 
 
 class Client(object):
@@ -62,21 +53,23 @@ class Client(object):
 
 
     def get_page(self, presentation_id, page_id):
-        """Retrieves an existing presentation
+        """Retrieves an existing <Page>
         and initializes it with and existing
-        <Presentation> object
+        <Presentation> object. Page is READ ONLY.
 
         :presentation_id: Slides Presentation ID
         :page: Slides Page ID
         :returns: <Page>
 
         """
-        presentation_raw = self._resource.presentation().get(
+        page_raw = self._resource.presentations().pages().get(
             presentationId = presentation_id,
             pageObjectId = page_id
         ).execute()
 
-        return Presentation(self, presentation_raw)
+        print len(page_raw)
+
+        return Page(page_raw)
 
 
     def push_updates(self, presentation_id, updates):

@@ -4,6 +4,24 @@ Google Sliders Utility Functions
     Wed 14 Sep 10:57:00 2016
 
 """
+import os
+
+
+def _find_credentials(name='xyz_creds.json'):
+    """finds credentials within project
+
+    :name: name of credential file
+    :returns: full path to credentials
+
+    """
+    home_dir = os.path.expanduser('~')
+    credential_dir = os.path.join(home_dir, 'lab/google-sliders/.credentials')
+    credential_path = os.path.join(credential_dir, name)
+    return credential_path
+
+
+class DELETE_MODES:
+    DELETE_ALL = 'DELETE_ALL'
 
 
 class UpdateReq(object):

@@ -4,7 +4,8 @@ import pytest
 from oauth2client.service_account import ServiceAccountCredentials
 from oauth2client.client import OAuth2Credentials
 
-from google_sliders.client import Client, _find_credentials
+from google_sliders.utils import _find_credentials
+from google_sliders.client import Client
 from google_sliders.models import Presentation, Page
 
 
@@ -12,7 +13,7 @@ SCOPES = 'https://www.googleapis.com/auth/drive'
 USER_EMAIL = 'team@xyzfoundation.com'
 API_KEY = 'AIzaSyBe7-2oJUa_Gyl4SdDdPfLRymCKCdeb0zU'
 PRESENTATION = '1gzVpBuzdrX58cKbTemnQWhgBrbd7QzFmnMen6GI8pNs'
-PAGE = '' # TODO
+PAGE = 'g11754963ba_0_5'
 REGEX = r'{{.*?}}'
 
 
@@ -33,6 +34,7 @@ def test_get_page(credentials):
     client = Client(credentials, API_KEY)
     page = client.get_page(PRESENTATION, PAGE)
     assert type(page) is Page
+    assert page.read_only
 
 
 def test_get_matches(credentials):
@@ -41,5 +43,6 @@ def test_get_matches(credentials):
 
     with presentation as pres:
         tags = presentation.get_matches(REGEX)
-        for tag in tags:
-            pres.replace_text(tag, 'HERE')
+        # print len(tags) + 'tags'
+        for i, tag in enumerate(tags):
+            pres.replace_text(tag, i)

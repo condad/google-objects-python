@@ -5,14 +5,18 @@ Google Slides Models
 
 """
 import re
-import importlib
+import logging
 from google_sliders.utils import UpdateReq
+
+logging.basicConfig()
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
 
 
 # TODO:
-#     i/ ensure replace_text always recieves a real value
-#     ii/ ensure all cell data reflects table row insertion
-#     and deletion
+    # i/ ensure replace_text always recieves a real value
+    # ii/ ensure all cell data reflects table row insertion and deletion
+    # iii/ page title and descriptor need to be found and initialized
 
 """Presentation"""
 
@@ -41,9 +45,9 @@ class Presentation(object):
         self._length = presentation.get('pageSize').get('length')
 
         # load page objects
-        self._pages = [Page(self, page) for page in presentation.get('slides')]
-        self._masters = [Page(self, page) for page in presentation.get('masters')]
-        self._layouts = [Page(self, page) for page in presentation.get('layouts')]
+        self._pages = [Page(page, self) for page in presentation.get('slides')]
+        self._masters = [Page(page, self) for page in presentation.get('masters')]
+        self._layouts = [Page(page, self) for page in presentation.get('layouts')]
 
     def __iter__(self):
         for page in self._pages:
@@ -57,10 +61,10 @@ class Presentation(object):
         return True
 
     def update(self):
-        self._client.push_updates(self._id, self._updates)
-
-        # TODO: add success handlers
-        del self._updates[:]
+        if self._updates:
+            self._client.push_updates(self._id, self._updates)
+            # TODO: add success handlers
+            del self._updates[:]
 
     def add_update(self, update):
         """Adds update of type <Dict>
@@ -88,53 +92,33 @@ class Presentation(object):
         tags = set()
         for page in self._pages:
             for element in page:
-
+                logger.debug('Checking Element...')
+                logger.debug('Type:' + str(type(element)))
                 # check shape
-                if type(element) is Shape and element.match(regex):
-                    tags.add(element.text)
+                if type(element) is Shape:
+                    if element.match(regex):
+                        logger.debug('Shape MATCH')
+                        tags.add(element.text)
 
                 # check all table cells
                 if type(element) is Table:
                     for row in element:
                         for cell in row:
                             if cell.match(regex):
+                                logger.debug('Cell MATCH')
                                 tags.add(cell.text)
+
+                print
+                logger.debug('Element did not match')
         return tags
 
     def replace_text(self, find, replace, case_sensitive=False):
         """Add update request for presentation-wide
         replacement with arg:find to arg:replace
         """
-
-        if not find:
-            return
         self.add_update(
-            UpdateReq.replace_all_text(find, replace, case_sensitive)
+            UpdateReq.replace_all_text(str(find), str(replace), case_sensitive)
         )
-
-    def __getattr__(self, name):
-        """Handle sub-class instantiation.
-
-            :name (str): Name of model to instantiate.
-
-        Returns: Instance of named class.
-        """
-        try:
-            # api class first
-            model = getattr(importlib.import_module(
-                __package__ + '.' + name.lower()), name)
-
-            self._log.debug('loaded instance of api class %s', name)
-            return model(self)
-        except ImportError:
-            try:
-                model = getattr(importlib.import_module(
-                    name.lower()), name)
-                self._log.debug('loaded instance of model class %s', name)
-                return model()
-            except ImportError:
-                self._log.debug('ImportError! Cound not load api or model class %s', name)
-                return name
 
 
 
@@ -144,7 +128,7 @@ class Presentation(object):
 class Page(object):
     """Docstring for Page. """
 
-    def __init__(self, presentation, page):
+    def __init__(self, page, presentation=None):
         self._presentation = presentation
 
         # load metadata
@@ -155,6 +139,12 @@ class Page(object):
         # load elements
         for element in page.get('pageElements'):
             self._elements.append(self._load_element(element))
+
+    @property
+    def read_only(self):
+        if not self._presentation:
+            return True
+        return False
 
     def __iter__(self):
         for element in self._elements:
@@ -186,7 +176,7 @@ class Page(object):
             for child in element.get('children'):
                 self._load_element(child)
             return
-
+        # after all objects define obj:
         # self._elements.append(obj)
 
     def add_update(self, update):
@@ -205,6 +195,9 @@ class PageElement(object):
     sets metadata properties and shared object
     operations.
     """
+
+    # TODO:
+    #     i/ title and description not initializing
 
     def __init__(self, page, **kwargs):
         self._page = page
@@ -255,7 +248,7 @@ class Shape(PageElement):
         """Returns True or False if regular expression
         matches the text inside.
         """
-        if self.test and re.match(regex, self.text):
+        if self.text and re.match(regex, self.text):
             return True
         else:
             return False
@@ -282,6 +275,7 @@ class Shape(PageElement):
         self.update(
             UpdateReq.delete_text()
         )
+
 
 
 class Table(PageElement):
@@ -311,7 +305,7 @@ class Table(PageElement):
             """Returns True or False if regular expression
             matches the text inside.
             """
-            if self.test and re.match(regex, self.text):
+            if self.text and re.match(regex, self.text):
                 return True
             else:
                 return False
@@ -356,20 +350,3 @@ class Table(PageElement):
     def __iter__(self):
         for row in self._rows:
             yield row
-
-    def seek(self, regex):
-        """Parses through table cells,
-        returning a list of values that
-        match given regex pattern.
-
-        :regex: a regular expression <String>
-        :returns: a list
-
-        """
-        matches = []
-        for row in self._rows:
-            for cell in row:
-                if re.match(regex, cell.text):
-                    matches.append(cell.text)
-
-        return matches
