@@ -76,24 +76,29 @@ class Presentation(object):
         else:
             return False
 
-    def find_tags(self, regex):
+    def get_matches(self, regex):
         """Search all Presentation text
         for matches with regex, returning
         the list of unique matches.
 
         :regex: a raw regex <String>
-        :returns: <List> of matches
+        :returns: <Set> of matches
 
         """
         tags = set()
         for page in self._pages:
             for element in page:
-                if type(element) is Shape:
-                    tags.add(element.seek(regex))
+
+                # check shape
+                if type(element) is Shape and element.match(regex):
+                    tags.add(element.text)
+
+                # check all table cells
                 if type(element) is Table:
-                    matches = element.seek(regex)
-                    for match in matches:
-                        tags.add(match)
+                    for row in element:
+                        for cell in row:
+                            if cell.match(regex):
+                                tags.add(cell.text)
         return tags
 
     def replace_text(self, find, replace, case_sensitive=False):
@@ -246,19 +251,14 @@ class Shape(PageElement):
             self._text = None
             self._rendered = None
 
-    def seek(self, regex):
-        """Returns Shape text if regular expression
-        matches it.
-
-        :regex: Raw <String>
-        :returns: self.text OR None
-
+    def match(self, regex):
+        """Returns True or False if regular expression
+        matches the text inside.
         """
-        if not self.text:
-            return
-        if re.match(regex, self.text):
-            return self.text
-        return
+        if self.test and re.match(regex, self.text):
+            return True
+        else:
+            return False
 
     @property
     def text(self):
@@ -306,6 +306,15 @@ class Table(PageElement):
             # initialize values
             self._text = cell.get('text').get('rawText')
             self._rendered = cell.get('text').get('renderedText')
+
+        def match(self, regex):
+            """Returns True or False if regular expression
+            matches the text inside.
+            """
+            if self.test and re.match(regex, self.text):
+                return True
+            else:
+                return False
 
         @property
         def text(self):
