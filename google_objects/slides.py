@@ -6,7 +6,7 @@ Google Slides Models
 """
 import re
 import logging
-from google_sliders.utils import UpdateReq
+from .utils import SlidesUpdate
 
 logging.basicConfig()
 logger = logging.getLogger(__name__)
@@ -14,14 +14,15 @@ logger.setLevel(logging.DEBUG)
 
 
 # TODO:
-    # i/ ensure replace_text always recieves a real value
-    # ii/ ensure all cell data reflects table row insertion and deletion
-    # iii/ page title and descriptor need to be found and initialized
+    # i/ ensure all cell data reflects table row insertion and deletion
+    # ii/ page title and descriptor need to be found and initialized
+
 
 """Presentation"""
 
 
 class Presentation(object):
+
     """Google Presentation Object,
     holds batch update request lists and
     passes it to its <Client> for execution.
@@ -37,7 +38,6 @@ class Presentation(object):
         self._updates = []
 
         # load presentation metadata
-
         self._id = presentation.get('presentationId')
         self._title = presentation.get('title')
         self._locale = presentation.get('local')
@@ -81,8 +81,8 @@ class Presentation(object):
             return False
 
     def get_matches(self, regex):
-        """Search all Presentation text
-        for matches with regex, returning
+        """Search all Presentation text-based
+        elements for matches with regex, returning
         the list of unique matches.
 
         :regex: a raw regex <String>
@@ -107,9 +107,6 @@ class Presentation(object):
                             if cell.match(regex):
                                 logger.debug('Cell MATCH')
                                 tags.add(cell.text)
-
-                print
-                logger.debug('Element did not match')
         return tags
 
     def replace_text(self, find, replace, case_sensitive=False):
@@ -117,7 +114,7 @@ class Presentation(object):
         replacement with arg:find to arg:replace
         """
         self.add_update(
-            UpdateReq.replace_all_text(str(find), str(replace), case_sensitive)
+            SlidesUpdate.replace_all_text(str(find), str(replace), case_sensitive)
         )
 
 
@@ -126,7 +123,15 @@ class Presentation(object):
 
 
 class Page(object):
-    """Docstring for Page. """
+
+    """Corresponds with a Page object in the Slides
+    API, requires a <Presentation> object to push
+    updates back up.
+
+    args/
+        :page // dict of a Page object
+        :
+    """
 
     def __init__(self, page, presentation=None):
         self._presentation = presentation
@@ -217,7 +222,7 @@ class PageElement(object):
         presentation updates list.
         """
         self._page.add_update(
-            UpdateReq.delete_object(self._id)
+            SlidesUpdate.delete_object(self._id)
         )
 
 
@@ -262,18 +267,18 @@ class Shape(PageElement):
         if not self._text:
             # TODO: apply deleteText
             self.update(
-                UpdateReq.delete_text()
+                SlidesUpdate.delete_text()
             )
         # TODO: apply insertText
         self.update(
-            UpdateReq.insert_text()
+            SlidesUpdate.insert_text()
         )
         self._text = value
 
     @text.deleter
     def text(self):
         self.update(
-            UpdateReq.delete_text()
+            SlidesUpdate.delete_text()
         )
 
 
@@ -319,18 +324,18 @@ class Table(PageElement):
             if not self._text:
                 # TODO: apply deleteText
                 self._table.update(
-                    UpdateReq.delete_text()
+                    SlidesUpdate.delete_text()
                 )
             # TODO: apply insertText
             self._table.update(
-                UpdateReq.insert_text()
+                SlidesUpdate.insert_text()
             )
             self._text = value
 
         @text.deleter
         def text(self):
             self._table.update(
-                UpdateReq.delete_text()
+                SlidesUpdate.delete_text()
             )
 
     def __init__(self, page, **kwargs):

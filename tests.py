@@ -4,9 +4,8 @@ import pytest
 from oauth2client.service_account import ServiceAccountCredentials
 from oauth2client.client import OAuth2Credentials
 
-from google_sliders.utils import _find_credentials
-from google_sliders.client import Client
-from google_sliders.models import Presentation, Page
+from google_objects.client import Client, _find_credentials
+from google_objects.slides import Presentation, Page
 
 
 SCOPES = 'https://www.googleapis.com/auth/drive'

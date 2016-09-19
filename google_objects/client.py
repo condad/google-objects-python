@@ -4,17 +4,36 @@ Google Slides API HTTP Resource
     Tue 13 Sep 22:17:15 2016
 
 """
+import os
 import re
 import logging
 import httplib2
 
-from google_sliders.models import Presentation, Page
+from .slides import Presentation, Page
 from apiclient import discovery
 from apiclient.errors import HttpError
 
 logging.basicConfig()
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
+
+
+# TODO:
+#     i/ type match credentials
+#     ii/ start exception handling
+
+
+def _find_credentials(name='xyz_creds.json'):
+    """finds credentials within project
+
+    :name: name of credential file
+    :returns: full path to credentials
+
+    """
+    home_dir = os.path.expanduser('~')
+    credential_dir = os.path.join(home_dir, 'lab/google-objects/.credentials')
+    credential_path = os.path.join(credential_dir, name)
+    return credential_path
 
 
 class Client(object):
@@ -66,8 +85,6 @@ class Client(object):
             presentationId = presentation_id,
             pageObjectId = page_id
         ).execute()
-
-        print len(page_raw)
 
         return Page(page_raw)
 
