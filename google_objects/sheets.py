@@ -1,0 +1,70 @@
+"""
+
+Google Sheets Models
+    Mon Sep 19 21:10:28 2016
+
+"""
+import re
+import logging
+# from .utils import >>>
+
+logging.basicConfig()
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+
+
+# TODO:
+    # i/ ensure all cell data reflects table row insertion and deletion
+    # ii/ page title and descriptor need to be found and initialized
+
+
+"""Spreadsheet"""
+
+class Spreadsheet(object):
+
+    """Represents a Google API Spreadsheet object"""
+
+    def __init__(self, client, spreadsheet):
+        """Creates a new Spreadsheet Object"""
+
+        self._client = client
+        self._updates = []
+
+        # load presentation metadata
+        self._id = spreadsheet.get('spreadsheetId')
+        self._title = None
+        self._locale = None
+
+        if 'properties' in spreadsheet:
+            self._title = spreadsheet.properties('title')
+            self._locale = spreadsheet.properties('locale')
+
+        self._sheets = [Sheet(sheet, self) for sheet in spreadsheet.get('sheets')]
+
+    def __iter__(self):
+        for page in self._sheets:
+            yield page
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exception_type, exception_value, traceback):
+        self.update()
+        return True
+
+    def update(self):
+        if self._updates:
+            self._client.push_updates(self._id, self._updates)
+            # TODO: add success handlers
+            del self._updates[:]
+
+
+class Sheet(object):
+
+    """Represents a Google API Sheet object"""
+
+    def __init__(self, sheet, spreadsheet):
+        """Creates a new Sheet Object"""
+
+        self._spreadsheet = spreadsheet
+        self

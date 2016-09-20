@@ -107,7 +107,7 @@ class Presentation(object):
                             if cell.match(regex):
                                 logger.debug('Cell MATCH')
                                 tags.add(cell.text)
-        return tags
+        return list(tags)
 
     def replace_text(self, find, replace, case_sensitive=False):
         """Add update request for presentation-wide
@@ -301,10 +301,13 @@ class Table(PageElement):
             self._column = cell.get('location').get('columnIndex')
             self._row_span = cell.get('rowSpan')
             self._column_span = cell.get('rowColumn')
+            self._text = None
+            self._rendered = None
 
             # initialize values
-            self._text = cell.get('text').get('rawText')
-            self._rendered = cell.get('text').get('renderedText')
+            if 'text' in cell:
+                self._text = cell.get('text').get('rawText')
+                self._rendered = cell.get('text').get('renderedText')
 
         def match(self, regex):
             """Returns True or False if regular expression
