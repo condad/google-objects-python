@@ -107,7 +107,7 @@ class Presentation(object):
                             if cell.match(regex):
                                 logger.debug('Cell MATCH')
                                 tags.add(cell.text)
-        return tags
+        return list(tags)
 
     def replace_text(self, find, replace, case_sensitive=False):
         """Add update request for presentation-wide
