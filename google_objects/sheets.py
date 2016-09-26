@@ -36,14 +36,15 @@ class Spreadsheet(object):
         self._locale = None
 
         if 'properties' in spreadsheet:
-            self._title = spreadsheet.properties('title')
-            self._locale = spreadsheet.properties('locale')
+            self._title = spreadsheet['properties'].get('title')
+            self._locale = spreadsheet['properties'].get('locale')
 
         self._sheets = [Sheet(sheet, self) for sheet in spreadsheet.get('sheets')]
+        self._named_ranges = spreadsheet.get('namedRanges')
 
     def __iter__(self):
-        for page in self._sheets:
-            yield page
+        for sheet in self._sheets:
+            yield sheet
 
     def __enter__(self):
         return self
@@ -58,6 +59,12 @@ class Spreadsheet(object):
             # TODO: add success handlers
             del self._updates[:]
 
+    def named_ranges(self):
+        """Returns List of Named
+        Ranges of Spreadsheet
+        """
+        return self._named_ranges
+
 
 class Sheet(object):
 
@@ -65,6 +72,30 @@ class Sheet(object):
 
     def __init__(self, sheet, spreadsheet):
         """Creates a new Sheet Object"""
-
         self._spreadsheet = spreadsheet
-        self
+        self._id = None
+        self._title = None
+        self._locale = None
+        self._data = None
+        self.data = sheet
+
+        if 'properties' in sheet:
+            self._id = sheet['properties'].get('id')
+            self._title = sheet['properties'].get('title')
+            self._locale = sheet['properties'].get('locale')
+
+        if 'data' in sheet:
+            self._data = [Grid(grid, self) for grid in sheet.get('data')]
+
+        if 'merges' in sheet:
+            self._data = [Grid(grid, self) for grid in sheet.get('merges')]
+
+
+class Grid(object):
+
+    """Represents Grid Data In Google Sheets"""
+
+    def __init__(self, grid, sheet):
+        self._sheet = sheet
+
+        self.data = grid

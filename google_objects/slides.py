@@ -290,6 +290,24 @@ class Table(PageElement):
     #     i/ add dynamic row functionality
     #     that works in tandem with corresponding cells
 
+    def __init__(self, page, **kwargs):
+        table = kwargs.pop('table')
+        super(self.__class__, self).__init__(page, **kwargs)
+
+        # initialize metadata
+        self.num_rows, self.num_columns = table.get('rows'), table.get('columns')
+
+        # initialize rows and columsn
+        self._rows = []
+        for row in table.get('tableRows'):
+            self._rows.append(
+                [self.Cell(self, cell) for cell in row.get('tableCells')]
+            )
+
+    def __iter__(self):
+        for row in self._rows:
+            yield row
+
     class Cell(object):
         """Table Cell, only used by table"""
 
@@ -340,21 +358,3 @@ class Table(PageElement):
             self._table.update(
                 SlidesUpdate.delete_text()
             )
-
-    def __init__(self, page, **kwargs):
-        table = kwargs.pop('table')
-        super(self.__class__, self).__init__(page, **kwargs)
-
-        # initialize metadata
-        self.num_rows, self.num_columns = table.get('rows'), table.get('columns')
-
-        # initialize rows and columsn
-        self._rows = []
-        for row in table.get('tableRows'):
-            self._rows.append(
-                [self.Cell(self, cell) for cell in row.get('tableCells')]
-            )
-
-    def __iter__(self):
-        for row in self._rows:
-            yield row

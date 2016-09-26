@@ -4,7 +4,7 @@ import pytest
 from oauth2client.service_account import ServiceAccountCredentials
 from oauth2client.client import OAuth2Credentials
 
-from google_objects.client import Client, _find_credentials
+from google_objects.clients import SlidesAPI, _find_credentials
 from google_objects.slides import Presentation, Page
 
 
@@ -23,22 +23,26 @@ def credentials():
         .from_json_keyfile_name(creds, SCOPES).create_delegated(USER_EMAIL)
 
 
-def test_get_presentation(credentials):
-    client = Client(credentials, API_KEY)
-    presentation = client.get_presentation(PRESENTATION)
-    assert type(presentation) is Presentation
+@pytest.fixture
+def client(credentials):
+    api = SlidesAPI(credentials, API_KEY)
+    assert isinstance(api, SlidesAPI)
+    return api
 
 
-def test_get_page(credentials):
-    client = Client(credentials, API_KEY)
-    page = client.get_page(PRESENTATION, PAGE)
-    assert type(page) is Page
+def test_get_presentation(client):
+    presentation = client.presentation(PRESENTATION)
+    assert isinstance(presentation, Presentation)
+
+
+def test_get_page(client):
+    page = client.page(PRESENTATION, PAGE)
+    assert isinstance(page, Page)
     assert page.read_only
 
 
-def test_get_matches(credentials):
-    client = Client(credentials, API_KEY)
-    presentation = client.get_presentation(PRESENTATION)
+def test_get_matches(client):
+    presentation = client.presentation(PRESENTATION)
 
     with presentation as pres:
         tags = presentation.get_matches(REGEX)
