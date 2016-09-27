@@ -31,18 +31,18 @@ def client(credentials):
 
 
 def test_get_presentation(client):
-    presentation = client.presentation(PRESENTATION)
+    presentation = client.presentation_get(PRESENTATION)
     assert isinstance(presentation, Presentation)
 
 
 def test_get_page(client):
-    page = client.page(PRESENTATION, PAGE)
+    page = client.page_get(PRESENTATION, PAGE)
     assert isinstance(page, Page)
     assert page.read_only
 
 
 def test_get_matches(client):
-    presentation = client.presentation(PRESENTATION)
+    presentation = client.presentation_get(PRESENTATION)
 
     with presentation as pres:
         tags = presentation.get_matches(REGEX)

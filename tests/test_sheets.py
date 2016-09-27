@@ -6,7 +6,7 @@ from oauth2client.service_account import ServiceAccountCredentials
 from oauth2client.client import OAuth2Credentials
 
 from google_objects.clients import SheetsAPI, _find_credentials
-from google_objects.sheets import Spreadsheet
+from google_objects.sheets import Spreadsheet, Block
 
 
 SCOPES = 'https://www.googleapis.com/auth/spreadsheets'
@@ -30,16 +30,18 @@ def client(credentials):
 
 
 def test_get_spreadsheet(client):
-    print
     spreadsheet = client.spreadsheet(SPREADSHEET)
     assert isinstance(spreadsheet, Spreadsheet)
 
-
+    # test blocks
     for i, sheet in enumerate(spreadsheet):
-        print 'SHEET {}'.format(i)
-        print
-        print sheet.data.get('properties').get('title')
-        print sheet.data.get('data')
-        print sheet.data.get('merges')
-        print
-        print
+        block = sheet.get_values()
+        assert isinstance(block, Block)
+
+        # test cell types
+        for row in block:
+            for cell in row:
+                assert isinstance(cell, Block.Cell)
+                value = str(cell.value)
+                print type(value)
+                print value

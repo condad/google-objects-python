@@ -10,7 +10,7 @@ import logging
 import httplib2
 
 from .slides import Presentation, Page
-from .sheets import Spreadsheet
+from .sheets import Spreadsheet, Block
 from apiclient import discovery
 from apiclient.errors import HttpError
 
@@ -73,7 +73,7 @@ class SlidesAPI(GoogleAPI):
         self._resource = self.build('slides', 'v1beta1', discovery_url=base_url)
 
 
-    def presentation(self, id):
+    def presentation_get(self, id):
         """Returns a Presentation Object
 
         :id: Presentation ID
@@ -87,7 +87,7 @@ class SlidesAPI(GoogleAPI):
         return Presentation(self, presentation_raw)
 
 
-    def page(self, presentation_id, page_id):
+    def page_get(self, presentation_id, page_id):
         """Returns a Page Object
 
         :id: Page ID
@@ -164,9 +164,15 @@ class SheetsAPI(GoogleAPI):
 
         return Spreadsheet(self, spreadsheet_raw)
 
-    def range(self, sheet_range):
 
-        sheet_range
+    def values_get(self, spreadsheet_id, range_name):
+        """Initialize a new block and return it"""
+        values = self._resource.spreadsheets().values().get(
+            spreadsheetId = spreadsheet_id,
+            range = range_name
+        ).execute()
+        return Block(self, values)
+
 
 
     @classmethod

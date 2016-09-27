@@ -300,9 +300,8 @@ class Table(PageElement):
         # initialize rows and columsn
         self._rows = []
         for row in table.get('tableRows'):
-            self._rows.append(
-                [self.Cell(self, cell) for cell in row.get('tableCells')]
-            )
+            cells = [self.Cell(self, cell) for cell in row.get('tableCells')]
+            self._rows.append(cells)
 
     def __iter__(self):
         for row in self._rows:
@@ -358,3 +357,4 @@ class Table(PageElement):
             self._table.update(
                 SlidesUpdate.delete_text()
             )
+            self._text = None
