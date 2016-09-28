@@ -52,7 +52,6 @@ class Spreadsheet(object):
 
     def __exit__(self, exception_type, exception_value, traceback):
         self.update()
-        return True
 
     def update(self):
         if self._updates:
@@ -72,7 +71,7 @@ class Spreadsheet(object):
         with the raw data and the spreadsheet for update
         functionality.
         """
-        return self._client.values_get(self._id, sheet_range)
+        return self._client.get_values(self._id, sheet_range)
 
 
 class Sheet(object):

@@ -26,26 +26,25 @@ def credentials():
 @pytest.fixture
 def client(credentials):
     api = SlidesAPI(credentials, API_KEY)
-    assert isinstance(api, SlidesAPI)
     return api
 
 
 def test_get_presentation(client):
-    presentation = client.presentation_get(PRESENTATION)
+    presentation = client.get_presentation(PRESENTATION)
     assert isinstance(presentation, Presentation)
 
 
 def test_get_page(client):
-    page = client.page_get(PRESENTATION, PAGE)
+    page = client.get_page(PRESENTATION, PAGE)
     assert isinstance(page, Page)
     assert page.read_only
 
 
 def test_get_matches(client):
-    presentation = client.presentation_get(PRESENTATION)
+    presentation = client.get_presentation(PRESENTATION)
 
-    with presentation as pres:
+    with presentation:
         tags = presentation.get_matches(REGEX)
         # print len(tags) + 'tags'
         for i, tag in enumerate(tags):
-            pres.replace_text(tag, i)
+            presentation.replace_text(tag, i)

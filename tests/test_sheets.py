@@ -30,7 +30,7 @@ def client(credentials):
 
 
 def test_get_spreadsheet(client):
-    spreadsheet = client.spreadsheet(SPREADSHEET)
+    spreadsheet = client.get_spreadsheet(SPREADSHEET)
     assert isinstance(spreadsheet, Spreadsheet)
 
     # test blocks
