@@ -32,18 +32,6 @@ logger.setLevel(logging.DEBUG)
 #     ii/ start exception handling
 
 
-def _find_credentials(name='xyz_creds.json'):
-    """finds credentials within project
-
-    :name: name of credential file
-    :returns: full path to credentials
-
-    """
-    home_dir = os.path.expanduser('~')
-    credential_dir = os.path.join(home_dir, 'lab/google-objects/.credentials')
-    credential_path = os.path.join(credential_dir, name)
-    return credential_path
-
 
 class GoogleAPI(object):
 
@@ -59,7 +47,8 @@ class GoogleAPI(object):
         """create api specific http resource"""
 
         http = self._credentials.authorize(httplib2.Http())
-        return discovery.build(service, version, http=http, discoveryServiceUrl=discovery_url)
+        # return discovery.build(service, version, http=http, discoveryServiceUrl=discovery_url)
+        return discovery.build(service, version, http=http)
 
     def get_permissions(self, api):
         pass
@@ -91,9 +80,9 @@ class DriveAPI(GoogleAPI):
             fileId=file_id
         ).execute()
 
-        return File(data=data, client=self)
+        return File.from_existing(self, data)
 
-    def copy_file(self, file_id, parents=[], name=None):
+    def copy_file(self, file_id, file_body):
         """Copy file and place in folder.
 
         :file_id: drive file id
@@ -101,7 +90,8 @@ class DriveAPI(GoogleAPI):
         :returns: new, copied <File>
 
         """
-
+        parents = file_body.get('parents')
+        name = file_body.get('name')
         # get old file metadata if none provided
         if not parents or name:
             old_file = self._resource.files()
@@ -119,12 +109,44 @@ class DriveAPI(GoogleAPI):
         new_file = self._resource.files()
         new_file.copy(
             fileId=file_id,
-            body=metadata,
+            body=file_body,
             fields='id, webViewLink'
         )
         new_file.execute()
 
         return File(new_file, client=self)
+
+    def list_files(self, type=None, fields=[]):
+        """Shows basic usage of the Google Drive API.
+
+        Creates a Google Drive API service object and outputs the names and IDs
+        for up to 10 files.
+        """
+
+        fields = fields.join(', ')
+
+        files = self._resource.files()
+        files.list(
+            q='mimeType=\'{}\''.format(type.lower()),
+            pageSize=100,
+            fields="files(id, name)"
+        )
+        files.execute()
+
+        return [File(file, self) for file in files]
+
+
+    def create_permission(self, file_id, permission, message=None, notification=False):
+
+        # add permissions
+        permissions = self._resource.permissions().create(
+            fileId=file_id,
+            body=permission,
+            emailMessage=message,
+            sendNotificationEmail=notification,
+        ).execute()
+        # permissions.execute()
+
 
 class SlidesAPI(GoogleAPI):
     """Google Slides Wrapper Object

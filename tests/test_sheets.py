@@ -13,7 +13,7 @@ SCOPES = 'https://www.googleapis.com/auth/spreadsheets'
 USER_EMAIL = 'team@xyzfoundation.com'
 SPREADSHEET = '1k-P5NUVAO2c8pXXuKJ4ctCyko_WlL4bF55H_R6ZXhLY'
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 
@@ -43,5 +43,5 @@ def test_get_spreadsheet(client):
             for cell in row:
                 assert isinstance(cell, Block.Cell)
                 value = str(cell.value)
-                print type(value)
-                print value
+                logger.debug(type(value))
+                logger.debug(value)
