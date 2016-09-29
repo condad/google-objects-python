@@ -66,6 +66,8 @@ class Presentation(object):
             # TODO: add success handlers
             del self._updates[:]
 
+        return self
+
     def add_update(self, update):
         """Adds update of type <Dict>
         to updates list
@@ -180,7 +182,6 @@ class Page(object):
         elif 'elementGroup' in element:
             for child in element.get('children'):
                 self._load_element(child)
-            return
         # after all objects define obj:
         # self._elements.append(obj)
 
@@ -204,7 +205,8 @@ class PageElement(object):
     # TODO:
     #     i/ title and description not initializing
 
-    def __init__(self, page, **kwargs):
+    def __init__(self, presentation, page, **kwargs):
+        self._presentation = presentation
         self._page = page
 
         # initialize metadata
@@ -290,6 +292,24 @@ class Table(PageElement):
     #     i/ add dynamic row functionality
     #     that works in tandem with corresponding cells
 
+    def __init__(self, page, **kwargs):
+        table = kwargs.pop('table')
+        super(self.__class__, self).__init__(page, **kwargs)
+
+        # initialize metadata
+        self.rows = []
+        self.num_rows, self.num_columns = table.get('rows'), table.get('columns')
+
+        # initialize rows and columsn
+        for row in table.get('tableRows'):
+            cells = [self.Cell(self, cell) for cell in row.get('tableCells')]
+            self.rows.append(cells)
+
+    def __iter__(self):
+        for row in self._rows:
+            for cell in self._rows:
+                yield cell
+
     class Cell(object):
         """Table Cell, only used by table"""
 
@@ -301,10 +321,13 @@ class Table(PageElement):
             self._column = cell.get('location').get('columnIndex')
             self._row_span = cell.get('rowSpan')
             self._column_span = cell.get('rowColumn')
+            self._text = None
+            self._rendered = None
 
             # initialize values
-            self._text = cell.get('text').get('rawText')
-            self._rendered = cell.get('text').get('renderedText')
+            if 'text' in cell:
+                self._text = cell.get('text').get('rawText')
+                self._rendered = cell.get('text').get('renderedText')
 
         def match(self, regex):
             """Returns True or False if regular expression
@@ -326,9 +349,11 @@ class Table(PageElement):
                 self._table.update(
                     SlidesUpdate.delete_text()
                 )
+
             # TODO: apply insertText
             self._table.update(
                 SlidesUpdate.insert_text()
+
             )
             self._text = value
 
@@ -337,21 +362,4 @@ class Table(PageElement):
             self._table.update(
                 SlidesUpdate.delete_text()
             )
-
-    def __init__(self, page, **kwargs):
-        table = kwargs.pop('table')
-        super(self.__class__, self).__init__(page, **kwargs)
-
-        # initialize metadata
-        self.num_rows, self.num_columns = table.get('rows'), table.get('columns')
-
-        # initialize rows and columsn
-        self._rows = []
-        for row in table.get('tableRows'):
-            self._rows.append(
-                [self.Cell(self, cell) for cell in row.get('tableCells')]
-            )
-
-    def __iter__(self):
-        for row in self._rows:
-            yield row
+            self._text = None
