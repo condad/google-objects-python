@@ -13,39 +13,48 @@ def _find_credentials(name='xyz_creds.json'):
 
     :name: name of credential file
     :returns: full path to credentials
-
     """
+
     home_dir = os.path.expanduser('~')
     credential_dir = os.path.join(home_dir, 'lab/google-objects/.credentials')
     credential_path = os.path.join(credential_dir, name)
     return credential_path
 
 
-def to_snake_case(name):
-    temp = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', name)
+def to_snake_case(string):
+    """changes camel_cased strings to snake_case"""
+
+    temp = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', string)
     return re.sub('([a-z0-9])([A-Z])', r'\1_\2', temp).lower()
 
 
-def to_camel_case(snake_str):
-    snake_str = snake_str.lstrip('_')
-    components = snake_str.split('_')
+def to_camel_case(string):
+    """changes snake_cased strings to camel cases,
+    strips leading underscores
+    """
+
+    components = string.lstrip('_').split('_')
     return components[0] + "".join(x.title() for x in components[1:])
 
 
-def keys_to_snake(dct):
-    """turns all dictionary keys to snake case,
-    adds leading underscore"""
-    camel_keys = dct.keys()
+def keys_to_snake(dt):
+    """changes camel_cased keys on argument to
+    snake case"""
+
+    camel_keys = dt.keys()
     snake_keys = [to_snake_case(key) for key in camel_keys]
 
     for new, old in zip(snake_keys, camel_keys):
         # transform camel keys to private snake keys
-        dct['_{}'.format(new)] = dct.pop(old)
+        dt[new] = dt.pop(old)
 
-    return dct
+    return dt
+
 
 def keys_to_camel(dct):
-    """turns all dictionary keys to camel case"""
+    """changes snake_cased keys on argument to
+    camel_case"""
+
     snake_keys = dct.keys()
     camel_keys = [to_camel_case(key) for key in snake_keys]
 
@@ -62,7 +71,10 @@ class DELETE_MODES:
 
 
 class SlidesUpdate(object):
-    """Update Operations <Dicts> for Presentations"""
+
+    """creates google-api-wrapper ready batchUpdate
+    request dictionaries
+    """
 
     @staticmethod
     def delete_object(obj_id):

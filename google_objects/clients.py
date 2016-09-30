@@ -137,15 +137,15 @@ class DriveAPI(GoogleAPI):
 
 
     def create_permission(self, file_id, permission, message=None, notification=False):
-
-        # add permissions
+        # makes api call
         permissions = self._resource.permissions().create(
             fileId=file_id,
             body=permission,
             emailMessage=message,
             sendNotificationEmail=notification,
         ).execute()
-        # permissions.execute()
+
+        return permissions
 
 
 class SlidesAPI(GoogleAPI):

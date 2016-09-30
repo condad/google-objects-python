@@ -1,7 +1,7 @@
-import sys
-import logging
+# -*- coding: utf-8 -*-
 
 import pytest
+
 from oauth2client.service_account import ServiceAccountCredentials
 from oauth2client.client import OAuth2Credentials
 
@@ -28,17 +28,28 @@ def client(credentials):
     return DriveAPI(credentials)
 
 
-def test_get_file(client):
-    with client.get_file(FILE) as test_file:
-        assert isinstance(test_file, File)
+@pytest.fixture
+def drive_file(client):
+    return client.get_file(FILE)
 
-        permission = test_file.new_permission()
-        assert isinstance(permission, Permission)
 
-        permission.email = 'sully4792@gmail.com'
-        permission.role = 'commenter'
-        permission.type = 'user'
-        print permission.as_dict()
-    # asser
-    # for permission in permissions:
-    #     assert isinstance(permission, Permission)
+def test_file(drive_file):
+    assert isinstance(drive_file, File)
+
+    # test properties
+    assert hasattr(drive_file, 'id')
+    assert hasattr(drive_file, 'type')
+
+
+def test_permissions(drive_file):
+    permission = drive_file.create(
+        email='sully4792@gmail.com',
+        role='commenter',
+        type='user',
+    )
+
+    # test properties
+    assert hasattr(permission, 'id')
+    assert hasattr(permission, 'email')
+    assert hasattr(permission, 'role')
+    assert hasattr(permission, 'type')

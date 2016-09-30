@@ -1,22 +1,22 @@
-from .utils import keys_to_snake, keys_to_camel
+from . import GoogleObject
+from ..utils import keys_to_snake, keys_to_camel
 
+"""
+    Google Drive API Resource Objects.
 
-class GoogleObject(object):
-    """Base Class for Google Objects"""
+        i/ File
+        ii/ Permission
 
-    def __init__(self, **kwargs):
-        # initalize  properties
-        for key in kwargs.keys():
-            self.__dict__[key] = kwargs.get(key)
-
+            Fri 30 Sep 00:52:13 2016
+"""
 
 class File(GoogleObject):
 
-    """Represents a Google Drive File object,
-    is updatable
-    """
+    """Represents a Google Drive File Resource"""
 
     _type_prefix = 'application/vnd.google-apps.'
+
+    # drive file types
     _types = {
         'audio',
         'document',
@@ -57,21 +57,6 @@ class File(GoogleObject):
         new_data = keys_to_snake(data)
         return cls(client, **new_data)
 
-
-    def __enter__(self):
-        return self
-
-
-    def __exit__(self, exception_type, exception_value, traceback):
-        # TODO:
-        #     use .update for all old_permissions
-
-        for permission in self._new_permissions:
-            self._client.create_permission(
-                file_id=self.id,
-                permission=permission.as_dict()
-            )
-
     @property
     def id(self):
         return self._id
@@ -82,29 +67,43 @@ class File(GoogleObject):
         name and parent folders.
         """
 
-        copy_body = self.as_dict()
-        copy_body['name'] = name or '{0} | COPY'.format(self.name)
-        copy_body['body'] parents or self.parents
+        new = self.as_dict()
+        new['name'] = name or '{0} | COPY'.format(self.name)
+        new['parents'] = parents or self.parents
 
-        return self.client.copy_file(self.id, copy)
+        return self.client.copy_file(self.id, new)
 
 
-    def permissions(self):
-        """Permission Generator"""
+    def list_permissions(self):
+        """returns list of permission for this
+        drive file, return empty if caller is
+        not authorized to share
+        """
+
+        permissions = []
 
         for permission in self._permissions:
-            yield Permission(file=self, **permission)
+            permissions.append(Permission(file=self, **permission))
 
-    def new_permission(self, **kwargs):
-        """initializes new permission and adds it
+        return permissions
+
+
+    def create_permission(self, **kwargs):
+        """initializes new permission objects and
+        pushes it, returns
+        and adds it
         to queue
         """
 
-        # if not kwargs.get('email'):
-        #     raise ValueError
+        if not kwargs.get('email'):
+            raise ValueError
 
         permission = Permission(self, **kwargs)
-        self._new_permissions.append(permission)
+
+        self._client.create_permission(
+            file_id=self.id,
+            permission=permission.as_dict()
+        )
 
         return permission
 
@@ -115,6 +114,7 @@ class Permission(GoogleObject):
 
     _role_default = 'reader'
     _role_levels = {'reader', 'commenter', 'writer', 'owner'}
+
     _type_default = 'user'
     _type_levels = {'user', 'group', 'domain', 'anyone'}
 
@@ -135,13 +135,12 @@ class Permission(GoogleObject):
 
         self._file = file
 
+        self.email = kwargs.pop('email')
         self.role = kwargs.pop('role', self._role_default)
-        self.typo = kwargs.pop('role', self._type_default)
-
+        self.type = kwargs.pop('type', self._type_default)
 
         # initalize the other properties
         super(self.__class__, self).__init__(**kwargs)
-
 
     @classmethod
     def from_existing(cls, file, data):
@@ -150,17 +149,13 @@ class Permission(GoogleObject):
         new_data = keys_to_snake(data)
         return cls(file, **new_data)
 
-
-    # properties
-
-
     @property
     def id(self):
-        return self._id
+        return self.__id
 
     @property
     def role(self):
-        return self._role
+        return self.__role
 
     @role.setter
     def role(self, value):
@@ -169,22 +164,22 @@ class Permission(GoogleObject):
 
     @property
     def type(self):
-        return self._type
+        return self.__type
 
     @type.setter
     def type(self, value):
         if value in self._type_levels:
-            self._type = value
+            self.__type = value
 
     @property
     def email(self):
-        return self._email_address
+        return self.__email_address
 
     @email.setter
     def email(self, value):
     # TODO:
     #     add update call if _id is present
-        self._email_address = value
+        self.__email_address = value
 
     def as_dict(self):
         """convert __dict__ keys to camel case, get
