@@ -18,7 +18,6 @@ from apiclient import discovery
 from apiclient.errors import HttpError
 
 from .drive import File, Permission
-from .slides import Presentation, Page
 from .sheets import Spreadsheet, Block
 
 
@@ -146,67 +145,6 @@ class DriveAPI(GoogleAPI):
         ).execute()
 
         return permissions
-
-
-class SlidesAPI(GoogleAPI):
-    """Google Slides Wrapper Object
-
-    This object wraps the Google API Slides resource
-    to provide a cleaner, conciser interface when dealing
-    with Google Slides objects.
-
-    Raises exceptions, of which API object related exceptions
-    are handled by its <Presentation> object.
-    """
-
-    def __init__(self, credentials, api_key, **kwargs):
-        super(self.__class__, self).__init__(credentials)
-        base_url = ('https://slides.googleapis.com/$discovery/rest?'
-                        'version=v1beta1&key=' + api_key)
-
-        self._resource = self.build('slides', 'v1beta1', discovery_url=base_url)
-
-
-    def get_presentation(self, id):
-        """Returns a Presentation Object
-
-        :id: Presentation ID
-        :returns: <Presentation> Model
-
-        """
-        data = self._resource.presentations()
-        data.get(presentationId = id)
-        data.execute()
-
-        return Presentation(self, data)
-
-
-    def get_page(self, presentation_id, page_id):
-        """Returns a Page Object
-
-        :id: Page ID
-        :returns: <Page> Model
-
-        """
-        data = self._resource.presentations().pages()
-        data.get(
-            presentationId = presentation_id,
-            pageObjectId = page_id
-        )
-        data.execute()
-
-        return Page(data)
-
-    def push_updates(self, presentation_id, updates):
-        """Push Update Requests to Presentation API,
-        throw errors if necessary.
-        """
-        presentation = self._resource.presentations()
-        presentation.batchUpdate(
-            presentationId=presentation_id,
-            body={'requests': updates}
-        )
-        presentation.execute()
 
 
 class SheetsAPI(GoogleAPI):

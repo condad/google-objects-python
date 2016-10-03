@@ -5,20 +5,6 @@ Google Sliders Utility Functions
 
 """
 import re
-import os
-
-
-def find_credentials(name='xyz_creds.json'):
-    """finds credentials within project
-
-    :name: name of credential file
-    :returns: full path to credentials
-    """
-
-    home_dir = os.path.expanduser('~')
-    credential_dir = os.path.join(home_dir, 'lab/google-objects/.credentials')
-    credential_path = os.path.join(credential_dir, name)
-    return credential_path
 
 
 def to_snake_case(string):
@@ -63,62 +49,3 @@ def keys_to_camel(dct):
         dct[new.lstrip('_')] = dct.pop(old)
 
     return dct
-
-
-
-class DELETE_MODES:
-    DELETE_ALL = 'DELETE_ALL'
-
-
-class SlidesUpdate(object):
-
-    """creates google-api-wrapper ready batchUpdate
-    request dictionaries
-    """
-
-    @staticmethod
-    def delete_object(obj_id):
-        return {
-            'deleteObject': {
-                'objectId': obj_id
-            }
-        }
-
-    @staticmethod
-    def replace_all_text(find, replace, case_sensitive=False):
-        return {
-            'replaceAllText': {
-                'findText': find,
-                'replaceText': replace,
-                'matchCase': case_sensitive
-            }
-        }
-
-    @staticmethod
-    def insert_text(obj_id, text, row=None, column=None, insertion_index=0):
-        return {
-            'insertText': {
-                'objectId': obj_id,
-                'text': text,
-                'cellLocation': {
-                    'rowIndex': row,
-                    'columnIndex': column
-                },
-                'insertionIndex': insertion_index
-
-            }
-        }
-        pass
-
-    @staticmethod
-    def delete_text(obj_id, row=None, column=None, mode='DELETE_ALL'):
-        return {
-            'deleteText': {
-                'objectId': obj_id,
-                'cellLocation': {
-                    'rowIndex': row,
-                    'columnIndex': column
-                },
-                'deleteMode': mode
-            }
-        }

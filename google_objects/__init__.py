@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 # for ease of importing
-from clients import SlidesAPI, SheetsAPI
+from clients import DriveAPI, SheetsAPI
 
 
 class GoogleObject(object):
@@ -19,4 +19,3 @@ class GoogleObject(object):
 # for ease of importing
 from .drive import File, Permission
 from .sheets import Spreadsheet, Sheet, Block
-from .slides import Presentation, Page, Shape, Table
