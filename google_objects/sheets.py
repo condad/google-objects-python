@@ -100,7 +100,6 @@ class Sheet(object):
         return self._spreadsheet.get_data(self._title)
 
 
-
 class Block(object):
     """Recieves a dictionary corresponding to a
     ValueRange in Google Sheets and provides methods related
@@ -127,7 +126,6 @@ class Block(object):
             for cell in row:
                 cell.value = func(cell)
 
-
     @property
     def is_numerical(self):
         for row in self._rows:
@@ -135,7 +133,6 @@ class Block(object):
                 if not cell.is_number:
                     return False
         return True
-
 
     class Cell(object):
         """Represents a Google Sheets Cell, each value

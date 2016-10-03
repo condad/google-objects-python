@@ -8,7 +8,7 @@ import re
 import os
 
 
-def _find_credentials(name='xyz_creds.json'):
+def find_credentials(name='xyz_creds.json'):
     """finds credentials within project
 
     :name: name of credential file
