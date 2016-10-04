@@ -7,3 +7,4 @@ __pycache__/
 .credentials
 *_creds.json
 .cache/
+set_test_env.sh

@@ -1,5 +1,5 @@
 from . import GoogleObject
-from ..utils import keys_to_snake, keys_to_camel
+from .utils import keys_to_snake, keys_to_camel
 
 """
     Google Drive API Resource Objects.
@@ -17,6 +17,7 @@ class File(GoogleObject):
     _type_prefix = 'application/vnd.google-apps.'
 
     # drive file types
+    _default_type = 'unknown'
     _types = {
         'audio',
         'document',
@@ -46,9 +47,11 @@ class File(GoogleObject):
         self._new_permissions = []
         self._updates = []
 
+        self.type = kwargs.pop('type', self._default_type)
+        self.parents = kwargs.pop('parents', [])
+
         # initalize the other properties
         super(self.__class__, self).__init__(**kwargs)
-
 
     @classmethod
     def from_existing(cls, client, data):
@@ -59,9 +62,32 @@ class File(GoogleObject):
 
     @property
     def id(self):
-        return self._id
+        return self.__id or None
 
     @property
+    def type(self):
+        return self.__type
+
+    @type.setter
+    def type(self, value):
+        """ensures type is valid, assigns type to
+        unknown if no argument is given"""
+
+        file_type = value or self._default_type
+        file_type = value.lower()
+        if value not in self._types:
+            raise ValueError
+
+        self.__mime_type = '{}{}'.format(self._type_prefix, file_type)
+
+    @property
+    def parents(self):
+        return self.__parents
+
+    @parents.setter
+    def parents(self, value):
+        self.__parents = value
+
     def copy(self, name=None, parents=[]):
         """Copies self, optionally altering
         name and parent folders.
@@ -69,10 +95,10 @@ class File(GoogleObject):
 
         new = self.as_dict()
         new['name'] = name or '{0} | COPY'.format(self.name)
-        new['parents'] = parents or self.parents
+        if parents:
+            new['parents'] = parents
 
         return self.client.copy_file(self.id, new)
-
 
     def list_permissions(self):
         """returns list of permission for this
@@ -112,10 +138,10 @@ class Permission(GoogleObject):
 
     """Google Drive File Permission"""
 
-    _role_default = 'reader'
+    _default_role = 'reader'
     _role_levels = {'reader', 'commenter', 'writer', 'owner'}
 
-    _type_default = 'user'
+    _default_type = 'user'
     _type_levels = {'user', 'group', 'domain', 'anyone'}
 
     # api key names
@@ -136,8 +162,8 @@ class Permission(GoogleObject):
         self._file = file
 
         self.email = kwargs.pop('email')
-        self.role = kwargs.pop('role', self._role_default)
-        self.type = kwargs.pop('type', self._type_default)
+        self.role = kwargs.pop('role', self._default_role)
+        self.type = kwargs.pop('type', self._default_type)
 
         # initalize the other properties
         super(self.__class__, self).__init__(**kwargs)
@@ -188,12 +214,9 @@ class Permission(GoogleObject):
 
         return_dict = keys_to_camel(self.__dict__)
         keys = return_dict.keys()
-        print keys
         key_set = set(keys)
 
         excess_key_set = key_set - self._properties
-        print excess_key_set
-        print return_dict
         excess_keys = list(excess_key_set)
 
         for key in excess_keys:

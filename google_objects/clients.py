@@ -89,50 +89,40 @@ class DriveAPI(GoogleAPI):
         :returns: new, copied <File>
 
         """
-        parents = file_body.get('parents')
-        name = file_body.get('name')
+
         # get old file metadata if none provided
-        if not parents or name:
-            old_file = self._resource.files()
-            old_file.get(fileId = file_id)
-            old_file.execute()
+        if not file_body:
+            file_body = self._resource.files().get(
+                fileId=file_id
+            ).execute()
 
-            if not parents:
-                parents = old_file.get('parents')
-            if not name:
-                name = '{0} | COPY'.format(old_file.get('name'))
-
-        # set metadata body
-        metadata = {'name': name, 'parents': parents}
-
-        new_file = self._resource.files()
-        new_file.copy(
+        new_file = self._resource.files().copy(
             fileId=file_id,
             body=file_body,
             fields='id, webViewLink'
-        )
-        new_file.execute()
+        ).execute()
 
-        return File(new_file, client=self)
+        return File(client=self, new_file)
 
-    def list_files(self, type=None, fields=[]):
+    def list_files(self, type=None, fields=['files(id, name)']):
         """Shows basic usage of the Google Drive API.
 
         Creates a Google Drive API service object and outputs the names and IDs
         for up to 10 files.
         """
 
-        fields = fields.join(', ')
+        if hasattr(fields, '__iter__'):
+            fields = ', '.join(fields)
 
         files = self._resource.files()
         files.list(
             q='mimeType=\'{}\''.format(type.lower()),
             pageSize=100,
-            fields="files(id, name)"
+            fields=fields
         )
         files.execute()
 
-        return [File(file, self) for file in files]
+        return [File(self, each) for each in files]
 
 
     def create_permission(self, file_id, permission, message=None, notification=False):
@@ -151,13 +141,12 @@ class SheetsAPI(GoogleAPI):
 
     """Creates a Google Sheets Resource"""
 
-    def __init__(self, credentials, **kwargs):
-        super(self.__class__, self).__init__(credentials, **kwargs)
-        base_url = ('https://sheets.googleapis.com/$discovery/rest?'
-                    'version=v4')
-
-        self._resource = self.build('sheets', 'v4', discovery_url=base_url)
-
+    def __init__(self, credentials):
+        """Google Drive API client, exposes
+        collection resources
+        """
+        super(self.__class__, self).__init__(credentials)
+        self._resource = self.build('sheets', 'v4')
 
     def get_spreadsheet(self, id):
         """Returns a Spreadsheet Object

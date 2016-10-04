@@ -24,28 +24,28 @@ def to_camel_case(string):
 
 
 def keys_to_snake(dt):
-    """changes camel_cased keys on argument to
+    """recursively changes camel_cased keys on argument to
     snake case"""
 
-    camel_keys = dt.keys()
-    snake_keys = [to_snake_case(key) for key in camel_keys]
+    for key, val in dt.iteritems():
+        if isinstance(val, dict):
+            val = keys_to_snake(val)
 
-    for new, old in zip(snake_keys, camel_keys):
-        # transform camel keys to private snake keys
-        dt[new] = dt.pop(old)
+        new_key = to_snake_case(key)
+        dt[new_key] = dt.pop(key)
 
     return dt
 
 
-def keys_to_camel(dct):
-    """changes snake_cased keys on argument to
-    camel_case"""
+def keys_to_camel(dt):
+    """recursively changes snake_cased keys on argument to
+    camel_case, strips leading underscores"""
 
-    snake_keys = dct.keys()
-    camel_keys = [to_camel_case(key) for key in snake_keys]
+    for key, val in dt.iteritems():
+        if isinstance(val, dict):
+            val = keys_to_camel(val)
 
-    for new, old in zip(camel_keys, snake_keys):
-        # transform camel keys to private snake keys
-        dct[new.lstrip('_')] = dct.pop(old)
+        new_key = to_camel_case(key).lstrip('_')
+        dt[new_key] = dt.pop(key)
 
-    return dct
+    return dt

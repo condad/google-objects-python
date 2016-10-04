@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 
-# for ease of importing
-from clients import DriveAPI, SheetsAPI
-
 
 class GoogleObject(object):
 
@@ -17,5 +14,6 @@ class GoogleObject(object):
 
 
 # for ease of importing
+from clients import DriveAPI, SheetsAPI
 from .drive import File, Permission
 from .sheets import Spreadsheet, Sheet, Block
