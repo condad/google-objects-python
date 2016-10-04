@@ -10,7 +10,7 @@ class GoogleObject(object):
     def __init__(self, **kwargs):
         # initalize  properties
         for key in kwargs.keys():
-            self.__dict__['__{}'.format(key)] = kwargs.get(key)
+            self.__dict__['_{}'.format(key)] = kwargs.get(key)
 
 
 # for ease of importing

@@ -40,13 +40,16 @@ def test_file(drive_file):
 
 
 def test_permissions(drive_file):
-    permission = drive_file.create(
+    permission = drive_file.add_permission(
         email='sully4792@gmail.com',
         role='commenter',
         type='user',
     )
 
     # test properties
+    print 'as dict:'
+    print permission.__dict__
+
     assert hasattr(permission, 'id')
     assert hasattr(permission, 'email')
     assert hasattr(permission, 'role')

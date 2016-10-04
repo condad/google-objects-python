@@ -31,7 +31,6 @@ logger.setLevel(logging.DEBUG)
 #     ii/ start exception handling
 
 
-
 class GoogleAPI(object):
 
     """Google API Base object that saves credentials
@@ -79,7 +78,7 @@ class DriveAPI(GoogleAPI):
             fileId=file_id
         ).execute()
 
-        return File.from_existing(self, data)
+        return File.from_existing(data, self)
 
     def copy_file(self, file_id, file_body):
         """Copy file and place in folder.
@@ -102,7 +101,7 @@ class DriveAPI(GoogleAPI):
             fields='id, webViewLink'
         ).execute()
 
-        return File(client=self, new_file)
+        return File.from_existing(new_file, self)
 
     def list_files(self, type=None, fields=['files(id, name)']):
         """Shows basic usage of the Google Drive API.
@@ -122,19 +121,19 @@ class DriveAPI(GoogleAPI):
         )
         files.execute()
 
-        return [File(self, each) for each in files]
+        return [File.from_existing(each, self) for each in files]
 
 
     def create_permission(self, file_id, permission, message=None, notification=False):
         # makes api call
-        permissions = self._resource.permissions().create(
+        data = self._resource.permissions().create(
             fileId=file_id,
             body=permission,
             emailMessage=message,
             sendNotificationEmail=notification,
         ).execute()
 
-        return permissions
+        return Permission(**data)
 
 
 class SheetsAPI(GoogleAPI):
@@ -155,24 +154,22 @@ class SheetsAPI(GoogleAPI):
         :returns: <Spreadsheet> Model
 
         """
-        data = self._resource.spreadsheets()
-        data.get(spreadsheetId = id)
-        data.execute()
+        data = self._resource.spreadsheets().get(
+            spreadsheetId=id
+        ).execute()
 
-        return Spreadsheet(self, data)
+        return Spreadsheet.from_existing(data, self)
 
 
     def get_values(self, spreadsheet_id, range_name):
         """Initialize a new block and return it"""
 
-        values = self._resource.spreadsheets().values()
-        values.get(
+        data = self._resource.spreadsheets().values().get(
             spreadsheetId=spreadsheet_id,
             range=range_name
-        )
-        values.execute()
+        ).execute()
 
-        return Block(self, values)
+        return Block.from_existing(data, client=self)
 
     def push_updates(self, spreadsheet_id, updates):
         spreadsheets = self._resource.spreadsheets()

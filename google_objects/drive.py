@@ -43,9 +43,9 @@ class File(GoogleObject):
         :client: <DriveAPI>
 
         """
-        self._client = client
-        self._new_permissions = []
-        self._updates = []
+        self.client = client
+        self.__new_permissions = []
+        self.__updates = []
 
         self.type = kwargs.pop('type', self._default_type)
         self.parents = kwargs.pop('parents', [])
@@ -54,7 +54,7 @@ class File(GoogleObject):
         super(self.__class__, self).__init__(**kwargs)
 
     @classmethod
-    def from_existing(cls, client, data):
+    def from_existing(cls, data, client):
         """initiates existing permissions object"""
 
         new_data = keys_to_snake(data)
@@ -62,11 +62,11 @@ class File(GoogleObject):
 
     @property
     def id(self):
-        return self.__id or None
+        return self._id or None
 
     @property
     def type(self):
-        return self.__type
+        return self._mime_type
 
     @type.setter
     def type(self, value):
@@ -78,15 +78,15 @@ class File(GoogleObject):
         if value not in self._types:
             raise ValueError
 
-        self.__mime_type = '{}{}'.format(self._type_prefix, file_type)
+        self._mime_type = '{}{}'.format(self._type_prefix, file_type)
 
     @property
     def parents(self):
-        return self.__parents
+        return self._parents
 
     @parents.setter
     def parents(self, value):
-        self.__parents = value
+        self._parents = value
 
     def copy(self, name=None, parents=[]):
         """Copies self, optionally altering
@@ -109,29 +109,31 @@ class File(GoogleObject):
         permissions = []
 
         for permission in self._permissions:
-            permissions.append(Permission(file=self, **permission))
+            permissions.append(Permission(self, **permission))
 
         return permissions
 
-
-    def create_permission(self, **kwargs):
+    def add_permission(self, **kwargs):
         """initializes new permission objects and
         pushes it, returns
         and adds it
         to queue
         """
 
-        if not kwargs.get('email'):
+        if not 'email' in kwargs:
             raise ValueError
 
-        permission = Permission(self, **kwargs)
+        permission = Permission.from_existing(kwargs, self)
 
-        self._client.create_permission(
+        created = self.client.create_permission(
             file_id=self.id,
             permission=permission.as_dict()
         )
 
-        return permission
+        created.file = self
+        created.email = kwargs['email']
+
+        return created
 
 
 class Permission(GoogleObject):
@@ -159,9 +161,9 @@ class Permission(GoogleObject):
 
         """
 
-        self._file = file
+        self.file = file
 
-        self.email = kwargs.pop('email')
+        self.email = kwargs.get('email', '')
         self.role = kwargs.pop('role', self._default_role)
         self.type = kwargs.pop('type', self._default_type)
 
@@ -169,7 +171,7 @@ class Permission(GoogleObject):
         super(self.__class__, self).__init__(**kwargs)
 
     @classmethod
-    def from_existing(cls, file, data):
+    def from_existing(cls, data, file):
         """initiates existing permissions object"""
 
         new_data = keys_to_snake(data)
@@ -177,11 +179,11 @@ class Permission(GoogleObject):
 
     @property
     def id(self):
-        return self.__id
+        return self._id
 
     @property
     def role(self):
-        return self.__role
+        return self._role
 
     @role.setter
     def role(self, value):
@@ -190,22 +192,23 @@ class Permission(GoogleObject):
 
     @property
     def type(self):
-        return self.__type
+        return self._type
 
     @type.setter
     def type(self, value):
         if value in self._type_levels:
-            self.__type = value
+            self._type = value
 
     @property
     def email(self):
-        return self.__email_address
+        return self._email_address
 
     @email.setter
     def email(self, value):
     # TODO:
     #     add update call if _id is present
-        self.__email_address = value
+        if len(value.split('@')) is 2:
+            self._email_address = value
 
     def as_dict(self):
         """convert __dict__ keys to camel case, get
