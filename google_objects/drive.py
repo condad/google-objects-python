@@ -1,5 +1,5 @@
 from . import GoogleObject
-from ..utils import keys_to_snake, keys_to_camel
+from .utils import keys_to_snake, keys_to_camel
 
 """
     Google Drive API Resource Objects.
@@ -17,6 +17,7 @@ class File(GoogleObject):
     _type_prefix = 'application/vnd.google-apps.'
 
     # drive file types
+    _default_type = 'unknown'
     _types = {
         'audio',
         'document',
@@ -42,16 +43,18 @@ class File(GoogleObject):
         :client: <DriveAPI>
 
         """
-        self._client = client
-        self._new_permissions = []
-        self._updates = []
+        self.client = client
+        self.__new_permissions = []
+        self.__updates = []
+
+        self.type = kwargs.pop('type', self._default_type)
+        self.parents = kwargs.pop('parents', [])
 
         # initalize the other properties
         super(self.__class__, self).__init__(**kwargs)
 
-
     @classmethod
-    def from_existing(cls, client, data):
+    def from_existing(cls, data, client):
         """initiates existing permissions object"""
 
         new_data = keys_to_snake(data)
@@ -59,9 +62,32 @@ class File(GoogleObject):
 
     @property
     def id(self):
-        return self._id
+        return self._id or None
 
     @property
+    def type(self):
+        return self._mime_type
+
+    @type.setter
+    def type(self, value):
+        """ensures type is valid, assigns type to
+        unknown if no argument is given"""
+
+        file_type = value or self._default_type
+        file_type = value.lower()
+        if value not in self._types:
+            raise ValueError
+
+        self._mime_type = '{}{}'.format(self._type_prefix, file_type)
+
+    @property
+    def parents(self):
+        return self._parents
+
+    @parents.setter
+    def parents(self, value):
+        self._parents = value
+
     def copy(self, name=None, parents=[]):
         """Copies self, optionally altering
         name and parent folders.
@@ -69,10 +95,10 @@ class File(GoogleObject):
 
         new = self.as_dict()
         new['name'] = name or '{0} | COPY'.format(self.name)
-        new['parents'] = parents or self.parents
+        if parents:
+            new['parents'] = parents
 
         return self.client.copy_file(self.id, new)
-
 
     def list_permissions(self):
         """returns list of permission for this
@@ -83,39 +109,41 @@ class File(GoogleObject):
         permissions = []
 
         for permission in self._permissions:
-            permissions.append(Permission(file=self, **permission))
+            permissions.append(Permission(self, **permission))
 
         return permissions
 
-
-    def create_permission(self, **kwargs):
+    def add_permission(self, **kwargs):
         """initializes new permission objects and
         pushes it, returns
         and adds it
         to queue
         """
 
-        if not kwargs.get('email'):
+        if not 'email' in kwargs:
             raise ValueError
 
-        permission = Permission(self, **kwargs)
+        permission = Permission.from_existing(kwargs, self)
 
-        self._client.create_permission(
+        created = self.client.create_permission(
             file_id=self.id,
             permission=permission.as_dict()
         )
 
-        return permission
+        created.file = self
+        created.email = kwargs['email']
+
+        return created
 
 
 class Permission(GoogleObject):
 
     """Google Drive File Permission"""
 
-    _role_default = 'reader'
+    _default_role = 'reader'
     _role_levels = {'reader', 'commenter', 'writer', 'owner'}
 
-    _type_default = 'user'
+    _default_type = 'user'
     _type_levels = {'user', 'group', 'domain', 'anyone'}
 
     # api key names
@@ -133,17 +161,17 @@ class Permission(GoogleObject):
 
         """
 
-        self._file = file
+        self.file = file
 
-        self.email = kwargs.pop('email')
-        self.role = kwargs.pop('role', self._role_default)
-        self.type = kwargs.pop('type', self._type_default)
+        self.email = kwargs.get('email', '')
+        self.role = kwargs.pop('role', self._default_role)
+        self.type = kwargs.pop('type', self._default_type)
 
         # initalize the other properties
         super(self.__class__, self).__init__(**kwargs)
 
     @classmethod
-    def from_existing(cls, file, data):
+    def from_existing(cls, data, file):
         """initiates existing permissions object"""
 
         new_data = keys_to_snake(data)
@@ -151,11 +179,11 @@ class Permission(GoogleObject):
 
     @property
     def id(self):
-        return self.__id
+        return self._id
 
     @property
     def role(self):
-        return self.__role
+        return self._role
 
     @role.setter
     def role(self, value):
@@ -164,22 +192,23 @@ class Permission(GoogleObject):
 
     @property
     def type(self):
-        return self.__type
+        return self._type
 
     @type.setter
     def type(self, value):
         if value in self._type_levels:
-            self.__type = value
+            self._type = value
 
     @property
     def email(self):
-        return self.__email_address
+        return self._email_address
 
     @email.setter
     def email(self, value):
     # TODO:
     #     add update call if _id is present
-        self.__email_address = value
+        if len(value.split('@')) is 2:
+            self._email_address = value
 
     def as_dict(self):
         """convert __dict__ keys to camel case, get
@@ -188,12 +217,9 @@ class Permission(GoogleObject):
 
         return_dict = keys_to_camel(self.__dict__)
         keys = return_dict.keys()
-        print keys
         key_set = set(keys)
 
         excess_key_set = key_set - self._properties
-        print excess_key_set
-        print return_dict
         excess_keys = list(excess_key_set)
 
         for key in excess_keys:
