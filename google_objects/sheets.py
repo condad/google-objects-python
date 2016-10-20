@@ -1,13 +1,17 @@
+# -*- coding: utf-8 -*-
+
 """
 
-Google Sheets Models
+Google Sheets API
     Mon Sep 19 21:10:28 2016
 
 """
+
 import re
 import logging
 from decimal import Decimal, InvalidOperation
-from . import GoogleObject
+
+from . import GoogleAPI, GoogleObject
 from .utils import keys_to_snake
 
 logging.basicConfig()
@@ -19,6 +23,57 @@ logger.setLevel(logging.DEBUG)
     # i/ ensure all cell data reflects table row insertion and deletion
     # ii/ page title and descriptor need to be found and initialized
 
+
+class SheetsAPI(GoogleAPI):
+
+    """Creates a Google Sheets Resource"""
+
+    def __init__(self, credentials):
+        """Google Drive API client, exposes
+        collection resources
+        """
+        super(self.__class__, self).__init__(credentials)
+        self._resource = self.build('sheets', 'v4')
+
+    def get_spreadsheet(self, id):
+        """Returns a Spreadsheet Object
+
+        :id: Spreadsheet ID
+        :returns: <Spreadsheet> Model
+
+        """
+        data = self._resource.spreadsheets().get(
+            spreadsheetId=id
+        ).execute()
+
+        return Spreadsheet.from_existing(data, self)
+
+
+    def get_values(self, spreadsheet_id, range_name):
+        """Initialize a new block and return it"""
+
+        data = self._resource.spreadsheets().values().get(
+            spreadsheetId=spreadsheet_id,
+            range=range_name
+        ).execute()
+
+        return Block.from_existing(data, client=self)
+
+    def push_updates(self, spreadsheet_id, updates):
+        spreadsheets = self._resource.spreadsheets()
+        spreadsheets.batchUpdate(
+            presentationId = spreadsheet_id,
+            body={'requests': updates}
+        )
+        spreadsheets.execute()
+
+
+"""
+    Sheets Objects:
+        i/ Spreadsheet
+        ii/ Sheet
+        iii/ Block
+"""
 
 class Spreadsheet(GoogleObject):
 

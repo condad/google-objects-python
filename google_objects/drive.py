@@ -1,13 +1,114 @@
-from . import GoogleObject
-from .utils import keys_to_snake, keys_to_camel
+# -*- coding: utf-8 -*-
 
 """
-    Google Drive API Resource Objects.
 
+Google Drive API
+    Tue 13 Sep 22:16:41 2016
+
+"""
+
+import logging
+
+from . import GoogleAPI, GoogleObject
+from .utils import keys_to_snake, keys_to_camel
+
+logging.basicConfig()
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+
+
+# TODO:
+    # i/ add greater permissions functionality
+
+
+class DriveAPI(GoogleAPI):
+
+    """Google Drive Wrapper Object,
+    exposes all Drive API operations
+    """
+
+    def __init__(self, credentials):
+        """Google Drive API client, exposes
+        collection resources
+        """
+        super(self.__class__, self).__init__(credentials)
+        self._resource = self.build('drive', 'v3')
+
+    def get_file(self, file_id):
+        """Returns an initialized
+        File Instance.
+
+        :file_id: Google Drive File ID
+        :returns: <File>
+
+        """
+
+        data = self._resource.files().get(
+            fileId=file_id
+        ).execute()
+
+        return File.from_existing(data, self)
+
+    def copy_file(self, file_id, file_body):
+        """Copy file and place in folder.
+
+        :file_id: drive file id
+        :folder_id: drive file#folder id
+        :returns: new, copied <File>
+
+        """
+
+        # get old file metadata if none provided
+        if not file_body:
+            file_body = self._resource.files().get(
+                fileId=file_id
+            ).execute()
+
+        new_file = self._resource.files().copy(
+            fileId=file_id,
+            body=file_body,
+            fields='id, webViewLink'
+        ).execute()
+
+        return File.from_existing(new_file, self)
+
+    def list_files(self, type=None, fields=['files(id, name)']):
+        """Shows basic usage of the Google Drive API.
+
+        Creates a Google Drive API service object and outputs the names and IDs
+        for up to 10 files.
+        """
+
+        if hasattr(fields, '__iter__'):
+            fields = ', '.join(fields)
+
+        files = self._resource.files()
+        files.list(
+            q='mimeType=\'{}\''.format(type.lower()),
+            pageSize=100,
+            fields=fields
+        )
+        files.execute()
+
+        return [File.from_existing(each, self) for each in files]
+
+
+    def create_permission(self, file_id, permission, message=None, notification=False):
+        # makes api call
+        data = self._resource.permissions().create(
+            fileId=file_id,
+            body=permission,
+            emailMessage=message,
+            sendNotificationEmail=notification,
+        ).execute()
+
+        return Permission(**data)
+
+
+"""
+    Drive Objects:
         i/ File
         ii/ Permission
-
-            Fri 30 Sep 00:52:13 2016
 """
 
 class File(GoogleObject):

@@ -1,12 +1,17 @@
+# -*- coding: utf-8 -*-
+
 """
 
-Google Slides Models
+Google Slides API
     Tue 13 Sep 22:16:41 2016
 
 """
+
 import re
 import logging
-from .utils import SlidesUpdate
+
+from . import GoogleAPI, GoogleObject
+from .utils import keys_to_snake
 
 logging.basicConfig()
 logger = logging.getLogger(__name__)
@@ -17,7 +22,9 @@ logger.setLevel(logging.DEBUG)
     # i/ ensure all cell data reflects table row insertion and deletion
     # ii/ page title and descriptor need to be found and initialized
 
+
 class SlidesAPI(GoogleAPI):
+
     """Google Slides Wrapper Object
 
     This object wraps the Google API Slides resource
@@ -78,36 +85,58 @@ class SlidesAPI(GoogleAPI):
         presentation.execute()
 
 
-"""Presentation"""
+
+"""
+    Slides Objects:
+        i/ Presentation
+        ii/ Page
+        iii/ Shape (Page Element)
+        iv/ Table (Page Element)
+"""
 
 
-class Presentation(object):
+class Presentation(GoogleObject):
 
     """Google Presentation Object,
     holds batch update request lists and
     passes it to its <Client> for execution.
 
     """
-    def __init__(self, client, presentation):
+    def __init__(self, client=None, **kwargs):
         """Class for Presentation object
 
         :client: <Client> from .client
 
         """
-        self._client = client
-        self._updates = []
+        self.client = client
+        self.__updates = []
 
-        # load presentation metadata
-        self._id = presentation.get('presentationId')
-        self._title = presentation.get('title')
-        self._locale = presentation.get('local')
-        self._width = presentation.get('pageSize').get('width')
-        self._length = presentation.get('pageSize').get('length')
+        super(self.__class__, self).__init__(page, **kwargs)
 
         # load page objects
         self._pages = [Page(page, self) for page in presentation.get('slides')]
         self._masters = [Page(page, self) for page in presentation.get('masters')]
         self._layouts = [Page(page, self) for page in presentation.get('layouts')]
+
+    @classmethod
+    def from_existing(cls, data, client=None):
+        """initiates using existing Spreadsheet resource"""
+
+        new_data = keys_to_snake(data)
+        return cls(client, **new_data)
+
+    def __iter__(self):
+        for sheet in self.sheets:
+            yield sheet
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exception_type, exception_value, traceback):
+        if self._updates:
+            self._client.push_updates(self._id, self._updates)
+            # TODO: add success handlers
+            del self._updates[:]
 
     def __iter__(self):
         for page in self._pages:
@@ -141,6 +170,10 @@ class Presentation(object):
             return True
         else:
             return False
+
+    @property
+    def pages(self):
+        return [Page.from_existing(each, self) for each in self._sheets]
 
     def get_matches(self, regex):
         """Search all Presentation text-based
@@ -180,11 +213,7 @@ class Presentation(object):
         )
 
 
-
-"""Page"""
-
-
-class Page(object):
+class Page(GoogleObject):
 
     """Corresponds with a Page object in the Slides
     API, requires a <Presentation> object to push
@@ -252,11 +281,8 @@ class Page(object):
         return self._presentation.add_update(update)
 
 
+class PageElement(GoogleObject):
 
-"""Base Page Element"""
-
-
-class PageElement(object):
     """Initialized PageElement object and
     sets metadata properties and shared object
     operations.
@@ -268,6 +294,8 @@ class PageElement(object):
     def __init__(self, presentation, page, **kwargs):
         self._presentation = presentation
         self._page = page
+
+        super(self.__class__, self).__init__(page, **kwargs)
 
         # initialize metadata
         self._id = kwargs.pop('objectId')
@@ -288,14 +316,11 @@ class PageElement(object):
         )
 
 
-
-"""Sub Elements"""
-
-
 class Shape(PageElement):
+
     """Docstring for Shape. """
 
-    def __init__(self, page, **kwargs):
+    def __init__(self, presentation, page, **kwargs):
         """Shape Element from Slides"""
         shape = kwargs.pop('shape')
         super(self.__class__, self).__init__(page, **kwargs)
@@ -344,7 +369,6 @@ class Shape(PageElement):
         )
 
 
-
 class Table(PageElement):
     """Docstring for Table."""
 
@@ -352,7 +376,7 @@ class Table(PageElement):
     #     i/ add dynamic row functionality
     #     that works in tandem with corresponding cells
 
-    def __init__(self, page, **kwargs):
+    def __init__(self, presentation, page, **kwargs):
         table = kwargs.pop('table')
         super(self.__class__, self).__init__(page, **kwargs)
 
@@ -423,3 +447,65 @@ class Table(PageElement):
                 SlidesUpdate.delete_text()
             )
             self._text = None
+
+
+
+"""Helper Classes"""
+
+
+class DELETE_MODES:
+    DELETE_ALL = 'DELETE_ALL'
+
+
+class SlidesUpdate(object):
+
+    """creates google-api-wrapper ready batchUpdate
+    request dictionaries
+    """
+
+    @staticmethod
+    def delete_object(obj_id):
+        return {
+            'deleteObject': {
+                'objectId': obj_id
+            }
+        }
+
+    @staticmethod
+    def replace_all_text(find, replace, case_sensitive=False):
+        return {
+            'replaceAllText': {
+                'findText': find,
+                'replaceText': replace,
+                'matchCase': case_sensitive
+            }
+        }
+
+    @staticmethod
+    def insert_text(obj_id, text, row=None, column=None, insertion_index=0):
+        return {
+            'insertText': {
+                'objectId': obj_id,
+                'text': text,
+                'cellLocation': {
+                    'rowIndex': row,
+                    'columnIndex': column
+                },
+                'insertionIndex': insertion_index
+
+            }
+        }
+        pass
+
+    @staticmethod
+    def delete_text(obj_id, row=None, column=None, mode='DELETE_ALL'):
+        return {
+            'deleteText': {
+                'objectId': obj_id,
+                'cellLocation': {
+                    'rowIndex': row,
+                    'columnIndex': column
+                },
+                'deleteMode': mode
+            }
+        }

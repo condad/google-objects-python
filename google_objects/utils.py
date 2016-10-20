@@ -6,6 +6,18 @@ Google Sliders Utility Functions
 """
 import re
 
+def _find_credentials(name='xyz_creds.json'):
+    """finds credentials within project
+
+    :name: name of credential file
+    :returns: full path to credentials
+    """
+
+    home_dir = os.path.expanduser('~')
+    credential_dir = os.path.join(home_dir, 'lab/google-objects/.credentials')
+    credential_path = os.path.join(credential_dir, name)
+    return credential_path
+
 
 def to_snake_case(string):
     """changes camel_cased strings to snake_case"""
