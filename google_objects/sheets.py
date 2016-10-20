@@ -184,6 +184,12 @@ class Block(GoogleObject):
             self._block = block
             self.value = value
 
+        def __repr__(self):
+            return self.__str__()
+
+        def __str__(self):
+            return self.value.encode('utf-8').strip()
+
         @property
         def is_numerical(self):
             """Determines if value is a number, removes
