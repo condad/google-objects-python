@@ -31,22 +31,22 @@ def client(credentials):
     return api
 
 
-def test_get_presentation(client):
-    presentation = client.get_presentation(PRESENTATION)
-    assert isinstance(presentation, Presentation)
-
-
-def test_get_page(client):
-    page = client.get_page(PRESENTATION, PAGE)
-    assert isinstance(page, Page)
-    assert page.read_only
-
-
-# def test_get_matches(client):
+# def test_get_presentation(client):
 #     presentation = client.get_presentation(PRESENTATION)
+#     assert isinstance(presentation, Presentation)
 
-#     with presentation:
-#         tags = presentation.get_matches(REGEX)
-#         # print len(tags) + 'tags'
-#         for i, tag in enumerate(tags):
-#             presentation.replace_text(tag, i)
+
+# def test_get_page(client):
+#     page = client.get_page(PRESENTATION, PAGE)
+#     assert isinstance(page, Page)
+#     assert page.read_only
+
+
+def test_get_matches(client):
+    presentation = client.get_presentation(PRESENTATION)
+
+    with presentation:
+        tags = presentation.get_matches(REGEX)
+        # print len(tags) + 'tags'
+        for i, tag in enumerate(tags):
+            presentation.replace_text(tag, i)

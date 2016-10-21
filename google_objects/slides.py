@@ -22,7 +22,7 @@ logger.setLevel(logging.DEBUG)
     # i/ ensure all cell data reflects table row insertion and deletion
     # ii/ page title and descriptor need to be found and initialized
     # iii/ change .from_existing to .from_raw
-    # iv/ add Text nested class for Shape
+    # iv/ add Text nested class for Shape & Table
 
 
 class SlidesAPI(GoogleAPI):
@@ -38,7 +38,7 @@ class SlidesAPI(GoogleAPI):
     """
 
     def __init__(self, credentials, api_key):
-        super(self.__class__, self).__init__(credentials)
+        super(SlidesAPI, self).__init__(credentials)
         base_url = ('https://slides.googleapis.com/$discovery/rest?'
                         'version=v1beta1&key=' + api_key)
 
@@ -109,7 +109,7 @@ class Presentation(GoogleObject):
         self.client = client
         self.__updates = []
 
-        super(self.__class__, self).__init__(**kwargs)
+        super(Presentation, self).__init__(**kwargs)
 
     @classmethod
     def from_existing(cls, data, client=None):
@@ -125,8 +125,12 @@ class Presentation(GoogleObject):
         self.update()
 
     def __iter__(self):
-        for page in self.slides:
+        for page in self.slides():
             yield page
+
+    @property
+    def id(self):
+        return self._presentation_id
 
     def update(self):
         if self.__updates:
@@ -150,17 +154,14 @@ class Presentation(GoogleObject):
         else:
             return False
 
-    @property
     def slides(self):
-        return [Page(self, slide) for slide in self._slides]
+        return [Page(self, **slide) for slide in self._slides]
 
-    @property
     def masters(self):
-        return [Page(self, slide) for slide in self._masters]
+        return [Page(self, **slide) for slide in self._masters]
 
-    @property
     def layouts(self):
-        return [Page(self, slide) for slide in self._layouts]
+        return [Page(self, **slide) for slide in self._layouts]
 
     def get_matches(self, regex):
         """Search all Presentation text-based
@@ -173,7 +174,7 @@ class Presentation(GoogleObject):
         """
         tags = set()
 
-        for page in self.pages:
+        for page in self.slides():
             for element in page:
                 logger.debug('Checking Element...')
                 logger.debug('Type:' + str(type(element)))
@@ -186,11 +187,10 @@ class Presentation(GoogleObject):
 
                 # check all table cells
                 if type(element) is Table:
-                    for row in element:
-                        for cell in row:
-                            if cell.match(regex):
-                                logger.debug('Cell MATCH')
-                                tags.add(cell.text)
+                    for cell in element.cells():
+                        if cell.match(regex):
+                            logger.debug('Cell MATCH')
+                            tags.add(cell.text)
         return list(tags)
 
     def replace_text(self, find, replace, case_sensitive=False):
@@ -216,7 +216,7 @@ class Page(GoogleObject):
     def __init__(self, presentation=None, **kwargs):
         self.presentation = presentation
 
-        super(self.__class__, self).__init__(**kwargs)
+        super(Page, self).__init__(**kwargs)
 
     @classmethod
     def from_existing(cls, data, presentation=None):
@@ -271,12 +271,6 @@ class Page(GoogleObject):
         elif 'sheetsChart' in element:
             pass
 
-    def add_update(self, update):
-        """Adds update of type <Dict>
-        to updates list
-        """
-        return self.presentation.add_update(update)
-
 
 class PageElement(GoogleObject):
 
@@ -288,19 +282,11 @@ class PageElement(GoogleObject):
     # TODO:
     #     i/ title and description not initializing
 
-    def __init__(self, **kwargs):
-        super(self.__class__, self).__init__(page, **kwargs)
+    def __init__(self, presentation=None, page=None, **kwargs):
+        self.presentation = presentation
+        self.page = page
 
-    def update(self, update):
-        return self._page.add_update(update)
-
-    def delete(self):
-        """Adds deleteObject request to
-        presentation updates list.
-        """
-        self._page.add_update(
-            SlidesUpdate.delete_object(self._id)
-        )
+        super(PageElement, self).__init__(**kwargs)
 
     @property
     def id(self):
@@ -314,32 +300,29 @@ class PageElement(GoogleObject):
     def transform(self):
         return self._transform
 
+    def update(self, update):
+        return self.presentation.add_update(update)
+
+    def delete(self):
+        """Adds deleteObject request to
+        presentation updates list.
+        """
+        self.presentation.add_update(
+            SlidesUpdate.delete_object(self._id)
+        )
+
 
 class Shape(PageElement):
 
     """Docstring for Shape. """
 
     def __init__(self, presentation=None, page=None, **kwargs):
-        self.presentation = presentation
-        self.page = page
-
-        shape = kwargs.pop('shape')
-
         # set private attrs not done by base class
+        shape = kwargs.pop('shape')
         set_private_attrs(self, shape)
+        print vars(self)
 
-        super(self.__class__, self).__init__(page, **kwargs)
-
-        # set metadata
-        self._type = shape.get('shapeType')
-
-        # set text values
-        if shape.get('text'):
-            self._text = shape.get('text').get('rawText')
-            self._rendered = shape.get('text').get('renderedText')
-        else:
-            self._text = None
-            self._rendered = None
+        super(Shape, self).__init__(presentation, page, **kwargs)
 
     def match(self, regex):
         """Returns True or False if regular expression
@@ -351,27 +334,25 @@ class Shape(PageElement):
             return False
 
     @property
-    def raw_text(self):
-        if self._text and 'raw_text' in self._text:
+    def text(self):
+        if hasattr(self, '_text') and 'raw_text' in self._text:
             return self._text['raw_text']
 
     @property
     def rendered_text(self):
-        if self._text and 'rendered_text' in self._text:
+        if hasattr(self, '_text') and 'rendered_text' in self._text:
             return self._text['rendered_text']
 
     @text.setter
     def text(self, value):
         if not self._text:
-            # TODO: apply deleteText
-            self.update(
-                SlidesUpdate.delete_text()
-            )
-        # TODO: apply insertText
+            self.update(SlidesUpdate.delete_text(self.id))
+
         self.update(
-            SlidesUpdate.insert_text()
+            SlidesUpdate.insert_text(self.id, self.text)
         )
-        self._text = value
+
+        self._text['raw_text'] = value
 
     @text.deleter
     def text(self):
@@ -392,77 +373,62 @@ class Table(PageElement):
     #     i/ add dynamic row functionality
     #     that works in tandem with corresponding cells
 
-    def __init__(self, presentation, page, **kwargs):
+    def __init__(self, presentation=None, page=None, **kwargs):
         table = kwargs.pop('table')
-        super(self.__class__, self).__init__(page, **kwargs)
+        set_private_attrs(self, table)
 
-        # initialize metadata
-        self.rows = []
-        self.num_rows, self.num_columns = table.get('rows'), table.get('columns')
-
-        # initialize rows and columsn
-        for row in table.get('table_rows'):
-            cells = [self.Cell(self, cell) for cell in row.get('table_cells')]
-            self.rows.append(cells)
+        super(Table, self).__init__(presentation, page, **kwargs)
 
     def __iter__(self):
-        for row in self._rows:
-            for cell in self._rows:
-                yield cell
+        return self.cells()
 
     def rows(self):
-        # yield rows
-        pass
+        for row in self._table_rows:
+            yield [self.Cell(self, cell) for cell in row.get('table_cells')]
 
     def cells(self):
-        # yield cells
-        pass
+        for row in self._table_rows:
+            for cell in row.get('table_cells'):
+                yield self.Cell(self, **cell)
 
-    class Cell(object):
+    class Cell(GoogleObject):
         """Table Cell, only used by table"""
 
-        def __init__(self, table, cell):
-            self._table = table
+        def __init__(self, table, **kwargs):
+            self.table = table
 
-            # initialize metadata
-            self._row = cell.get('location').get('rowIndex')
-            self._column = cell.get('location').get('columnIndex')
-            self._row_span = cell.get('rowSpan')
-            self._column_span = cell.get('rowColumn')
-            self._text = None
-            self._rendered = None
-
-            # initialize values
-            if 'text' in cell:
-                self._text = cell.get('text').get('rawText')
-                self._rendered = cell.get('text').get('renderedText')
+            super(Table.Cell, self).__init__(**kwargs)
 
         def match(self, regex):
             """Returns True or False if regular expression
             matches the text inside.
             """
-            if self.text and re.match(regex, self.text):
+
+            if hasattr(self, '_text') and re.match(regex, self.text):
                 return True
-            else:
-                return False
+            return False
 
         @property
         def text(self):
-            return self._text
+            if hasattr(self, '_text') and 'raw_text' in self._text:
+                return self._text['raw_text']
 
         @text.setter
         def text(self, value):
-            if not self._text:
-                # TODO: apply deleteText
-                self._table.update(
-                    SlidesUpdate.delete_text()
+            if not hasattr(self, '_text') or self._text:
+                self.table.update(
+                    SlidesUpdate.delete_text(self.table.id)
                 )
 
-            # TODO: apply insertText
-            self._table.update(
-                SlidesUpdate.insert_text()
-
+            self.table.update(
+                SlidesUpdate.insert_text(
+                    self.table.id,
+                    self.text,
+                    self.row_index,
+                    self.column_index
+                )
             )
+
             self._text = value
 
         @text.deleter
@@ -471,6 +437,18 @@ class Table(PageElement):
                 SlidesUpdate.delete_text()
             )
             self._text = None
+
+        @property
+        def row_index(self):
+            return self._location.get('row_index')
+
+        @property
+        def column_index(self):
+            return self._location.get('column_index')
+
+        @property
+        def location(self):
+            return (self.row_index, self.column_index)
 
 
 
@@ -518,7 +496,6 @@ class SlidesUpdate(object):
 
             }
         }
-        pass
 
     @staticmethod
     def delete_text(obj_id, row=None, column=None, mode='DELETE_ALL'):

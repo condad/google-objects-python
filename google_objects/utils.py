@@ -51,11 +51,27 @@ def to_camel_case(string):
     return components[0] + "".join(x.title() for x in components[1:])
 
 
+def list_to_snake(a):
+    newArr = []
+
+    for i in a:
+        if isinstance(i, list):
+            newArr.append(list_to_snake(i))
+        elif isinstance(i, dict):
+            newArr.append(keys_to_snake(i))
+        else:
+            newArr.append(i)
+
+    return newArr
+
 def keys_to_snake(dt):
     """recursively changes camel_cased keys on argument to
     snake case"""
 
     for key, val in dt.iteritems():
+        if isinstance(val, list):
+            val = list_to_snake(val)
+
         if isinstance(val, dict):
             val = keys_to_snake(val)
 
