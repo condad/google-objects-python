@@ -19,6 +19,7 @@ logger.setLevel(logging.DEBUG)
 
 # TODO:
     # i/ add greater permissions functionality
+    # ii/ change .from_existing to .from_raw
 
 
 class DriveAPI(GoogleAPI):

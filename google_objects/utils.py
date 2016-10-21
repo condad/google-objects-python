@@ -4,19 +4,35 @@ Google Sliders Utility Functions
     Wed 14 Sep 10:57:00 2016
 
 """
+
+import os
 import re
 
-def _find_credentials(name='xyz_creds.json'):
+def find_credentials(name='xyz_creds.json'):
     """finds credentials within project
 
     :name: name of credential file
     :returns: full path to credentials
     """
 
-    home_dir = os.path.expanduser('~')
-    credential_dir = os.path.join(home_dir, 'lab/google-objects/.credentials')
+    credential_dir = os.path.expanduser('~/lab/google-objects/.credentials')
+    # credential_dir = os.path.join(home_dir, 'lab/google-objects/.credentials')
     credential_path = os.path.join(credential_dir, name)
     return credential_path
+
+
+def set_private_attrs(instance, dt):
+    """Sets (key, value) pairs of given dictionary
+    to private attributes (single leading underscore).
+
+    :instance: <Objec> Instance
+    :dt: <Dict>
+
+    """
+
+    for key, val in dt.iteritems():
+        setattr(instance, '_{}'.format(key), val)
+        # self.__dict__['_{}'.format(key)] = val
 
 
 def to_snake_case(string):

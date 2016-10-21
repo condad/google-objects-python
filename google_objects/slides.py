@@ -11,7 +11,7 @@ import re
 import logging
 
 from . import GoogleAPI, GoogleObject
-from .utils import keys_to_snake
+from .utils import keys_to_snake, set_private_attrs
 
 logging.basicConfig()
 logger = logging.getLogger(__name__)
@@ -21,6 +21,8 @@ logger.setLevel(logging.DEBUG)
 # TODO:
     # i/ ensure all cell data reflects table row insertion and deletion
     # ii/ page title and descriptor need to be found and initialized
+    # iii/ change .from_existing to .from_raw
+    # iv/ add Text nested class for Shape
 
 
 class SlidesAPI(GoogleAPI):
@@ -35,7 +37,7 @@ class SlidesAPI(GoogleAPI):
     are handled by its <Presentation> object.
     """
 
-    def __init__(self, credentials, api_key, **kwargs):
+    def __init__(self, credentials, api_key):
         super(self.__class__, self).__init__(credentials)
         base_url = ('https://slides.googleapis.com/$discovery/rest?'
                         'version=v1beta1&key=' + api_key)
@@ -50,11 +52,11 @@ class SlidesAPI(GoogleAPI):
         :returns: <Presentation> Model
 
         """
-        data = self._resource.presentations()
-        data.get(presentationId = id)
-        data.execute()
+        data = self._resource.presentations().get(
+            presentationId=id
+        ).execute()
 
-        return Presentation(self, data)
+        return Presentation.from_existing(data, self)
 
 
     def get_page(self, presentation_id, page_id):
@@ -64,25 +66,21 @@ class SlidesAPI(GoogleAPI):
         :returns: <Page> Model
 
         """
-        data = self._resource.presentations().pages()
-        data.get(
+        data = self._resource.presentations().pages().get(
             presentationId = presentation_id,
             pageObjectId = page_id
-        )
-        data.execute()
+        ).execute()
 
-        return Page(data)
+        return Page.from_existing(data)
 
     def push_updates(self, presentation_id, updates):
         """Push Update Requests to Presentation API,
         throw errors if necessary.
         """
-        presentation = self._resource.presentations()
-        presentation.batchUpdate(
+        presentation = self._resource.presentations().batchUpdate(
             presentationId=presentation_id,
             body={'requests': updates}
-        )
-        presentation.execute()
+        ).execute()
 
 
 
@@ -111,12 +109,7 @@ class Presentation(GoogleObject):
         self.client = client
         self.__updates = []
 
-        super(self.__class__, self).__init__(page, **kwargs)
-
-        # load page objects
-        self._pages = [Page(page, self) for page in presentation.get('slides')]
-        self._masters = [Page(page, self) for page in presentation.get('masters')]
-        self._layouts = [Page(page, self) for page in presentation.get('layouts')]
+        super(self.__class__, self).__init__(**kwargs)
 
     @classmethod
     def from_existing(cls, data, client=None):
@@ -125,35 +118,21 @@ class Presentation(GoogleObject):
         new_data = keys_to_snake(data)
         return cls(client, **new_data)
 
-    def __iter__(self):
-        for sheet in self.sheets:
-            yield sheet
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exception_type, exception_value, traceback):
-        if self._updates:
-            self._client.push_updates(self._id, self._updates)
-            # TODO: add success handlers
-            del self._updates[:]
-
-    def __iter__(self):
-        for page in self._pages:
-            yield page
-
     def __enter__(self):
         return self
 
     def __exit__(self, exception_type, exception_value, traceback):
         self.update()
-        return True
+
+    def __iter__(self):
+        for page in self.slides:
+            yield page
 
     def update(self):
-        if self._updates:
-            self._client.push_updates(self._id, self._updates)
+        if self.__updates:
+            self.client.push_updates(self.id, self.__updates)
             # TODO: add success handlers
-            del self._updates[:]
+            del self.__updates[:]
 
         return self
 
@@ -166,14 +145,22 @@ class Presentation(GoogleObject):
 
         """
         if type(update) is dict:
-            self._updates.append(update)
+            self.__updates.append(update)
             return True
         else:
             return False
 
     @property
-    def pages(self):
-        return [Page.from_existing(each, self) for each in self._sheets]
+    def slides(self):
+        return [Page(self, slide) for slide in self._slides]
+
+    @property
+    def masters(self):
+        return [Page(self, slide) for slide in self._masters]
+
+    @property
+    def layouts(self):
+        return [Page(self, slide) for slide in self._layouts]
 
     def get_matches(self, regex):
         """Search all Presentation text-based
@@ -185,10 +172,12 @@ class Presentation(GoogleObject):
 
         """
         tags = set()
-        for page in self._pages:
+
+        for page in self.pages:
             for element in page:
                 logger.debug('Checking Element...')
                 logger.debug('Type:' + str(type(element)))
+
                 # check shape
                 if type(element) is Shape:
                     if element.match(regex):
@@ -220,46 +209,59 @@ class Page(GoogleObject):
     updates back up.
 
     args/
-        :page // dict of a Page object
-        :
+        :presentation // <Presentation> instance
+        :kwargs // <Dict> representing API Page Resource
     """
 
-    def __init__(self, page, presentation=None):
-        self._presentation = presentation
+    def __init__(self, presentation=None, **kwargs):
+        self.presentation = presentation
 
-        # load metadata
-        self._id = page.get('objectId')
-        self._type = page.get('pageType')
-        self._elements = []
+        super(self.__class__, self).__init__(**kwargs)
 
-        # load elements
-        for element in page.get('pageElements'):
-            self._elements.append(self._load_element(element))
+    @classmethod
+    def from_existing(cls, data, presentation=None):
+        """initiates using existing Spreadsheet resource"""
+
+        new_data = keys_to_snake(data)
+        return cls(presentation, **new_data)
 
     @property
     def read_only(self):
-        if not self._presentation:
+        if not self.presentation:
             return True
         return False
 
     def __iter__(self):
-        for element in self._elements:
+        for element in self.elements:
             yield element
 
-    def _load_element(self, element):
-        """Initialize element object from
-        from slide element dict
+    @property
+    def elements(self):
+        """Generates Page elements recursively"""
 
-        :elements: <Dict>
-        :returns: NONE
+        elem_list = []
+
+        for element in self._page_elements:
+            if 'elementGroup' in element:
+                for child in element.get('children'):
+                    elem_list.append(self.__load_element(child))
+
+            elem_list.append(self.__load_element(element))
+
+        return elem_list
+
+    def __load_element(self, element):
+        """Returns element object from
+        slide element dict.
+
+        :element: <Dict> repr. Page Resource Element
+        :returns: <PageElement Super>
 
         """
         if 'shape' in element:
-            obj = Shape(self, **element)
-            self._elements.append(obj)
+            return Shape(self, **element)
         elif 'table' in element:
-            obj = Table(self, **element)
-            self._elements.append(obj)
+            return Table(self, **element)
         elif 'image' in element:
             pass
         elif 'video' in element:
@@ -268,17 +270,12 @@ class Page(GoogleObject):
             pass
         elif 'sheetsChart' in element:
             pass
-        elif 'elementGroup' in element:
-            for child in element.get('children'):
-                self._load_element(child)
-        # after all objects define obj:
-        # self._elements.append(obj)
 
     def add_update(self, update):
         """Adds update of type <Dict>
         to updates list
         """
-        return self._presentation.add_update(update)
+        return self.presentation.add_update(update)
 
 
 class PageElement(GoogleObject):
@@ -291,18 +288,8 @@ class PageElement(GoogleObject):
     # TODO:
     #     i/ title and description not initializing
 
-    def __init__(self, presentation, page, **kwargs):
-        self._presentation = presentation
-        self._page = page
-
+    def __init__(self, **kwargs):
         super(self.__class__, self).__init__(page, **kwargs)
-
-        # initialize metadata
-        self._id = kwargs.pop('objectId')
-        self._size = kwargs.pop('size')
-        self._transform = kwargs.pop('transform')
-        # self._title = kwargs.pop('title')
-        # self._description = kwargs.pop('description')
 
     def update(self, update):
         return self._page.add_update(update)
@@ -315,14 +302,32 @@ class PageElement(GoogleObject):
             SlidesUpdate.delete_object(self._id)
         )
 
+    @property
+    def id(self):
+        return self._object_id
+
+    @property
+    def size(self):
+        return self._size
+
+    @property
+    def transform(self):
+        return self._transform
+
 
 class Shape(PageElement):
 
     """Docstring for Shape. """
 
-    def __init__(self, presentation, page, **kwargs):
-        """Shape Element from Slides"""
+    def __init__(self, presentation=None, page=None, **kwargs):
+        self.presentation = presentation
+        self.page = page
+
         shape = kwargs.pop('shape')
+
+        # set private attrs not done by base class
+        set_private_attrs(self, shape)
+
         super(self.__class__, self).__init__(page, **kwargs)
 
         # set metadata
@@ -346,8 +351,14 @@ class Shape(PageElement):
             return False
 
     @property
-    def text(self):
-        return self._text
+    def raw_text(self):
+        if self._text and 'raw_text' in self._text:
+            return self._text['raw_text']
+
+    @property
+    def rendered_text(self):
+        if self._text and 'rendered_text' in self._text:
+            return self._text['rendered_text']
 
     @text.setter
     def text(self, value):
@@ -368,9 +379,14 @@ class Shape(PageElement):
             SlidesUpdate.delete_text()
         )
 
+    @property
+    def type(self):
+        return self._shape_type
+
 
 class Table(PageElement):
-    """Docstring for Table."""
+
+    """Represents a Google Slides Table Resource"""
 
     # TODO:
     #     i/ add dynamic row functionality
@@ -385,14 +401,22 @@ class Table(PageElement):
         self.num_rows, self.num_columns = table.get('rows'), table.get('columns')
 
         # initialize rows and columsn
-        for row in table.get('tableRows'):
-            cells = [self.Cell(self, cell) for cell in row.get('tableCells')]
+        for row in table.get('table_rows'):
+            cells = [self.Cell(self, cell) for cell in row.get('table_cells')]
             self.rows.append(cells)
 
     def __iter__(self):
         for row in self._rows:
             for cell in self._rows:
                 yield cell
+
+    def rows(self):
+        # yield rows
+        pass
+
+    def cells(self):
+        # yield cells
+        pass
 
     class Cell(object):
         """Table Cell, only used by table"""
@@ -451,7 +475,6 @@ class Table(PageElement):
 
 
 """Helper Classes"""
-
 
 class DELETE_MODES:
     DELETE_ALL = 'DELETE_ALL'

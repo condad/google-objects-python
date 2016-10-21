@@ -22,6 +22,7 @@ logger.setLevel(logging.DEBUG)
 # TODO:
     # i/ ensure all cell data reflects table row insertion and deletion
     # ii/ page title and descriptor need to be found and initialized
+    # iii/ change .from_existing to .from_raw
 
 
 class SheetsAPI(GoogleAPI):

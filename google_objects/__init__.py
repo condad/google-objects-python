@@ -5,6 +5,8 @@ import httplib2
 from apiclient import discovery
 from apiclient.errors import HttpError
 
+from .utils import set_private_attrs
+
 
 class GoogleAPI(object):
 
@@ -20,24 +22,22 @@ class GoogleAPI(object):
         """create api specific http resource"""
 
         http = self._credentials.authorize(httplib2.Http())
-        # return discovery.build(service, version, http=http, discoveryServiceUrl=discovery_url)
-        return discovery.build(service, version, http=http)
-
-    def get_permissions(self, api):
-        pass
+        return discovery.build(service, version, http=http, discoveryServiceUrl=discovery_url)
+        # return discovery.build(service, version, http=http)
 
 
 class GoogleObject(object):
 
     """Sets private properties on subclasses,
-    corresponding one-to-one with Google API Resources.
+    corresponding one-to-one with Google API Resource
+    values.
     """
 
     def __init__(self, **kwargs):
-        # initalize  properties
-        for key, val in kwargs.iteritems():
-            setattr(self, '_{}'.format(key), val)
-            # self.__dict__['_{}'.format(key)] = val
+        """Set Resource corresponding **kwargs
+        to private attributes.
+        """
+        set_private_attrs(self, kwargs)
 
 
 # for ease of importing
