@@ -104,8 +104,8 @@ class Spreadsheet(GoogleObject):
         return self
 
     def __exit__(self, exception_type, exception_value, traceback):
-        if self._updates:
-            self._client.push_updates(self._id, self._updates)
+        if self.__updates:
+            self.client.push_updates(self._id, self._updates)
             # TODO: add success handlers
             del self._updates[:]
 
@@ -125,7 +125,6 @@ class Spreadsheet(GoogleObject):
     def sheets(self):
         return [Sheet.from_existing(each, self) for each in self._sheets]
 
-    @property
     def named_ranges(self):
         return self._named_ranges
 
@@ -138,6 +137,7 @@ class Spreadsheet(GoogleObject):
 
 
 class Sheet(GoogleObject):
+
     """Represents a Google API Sheet object,
     there is little functionality associated with
     this object, it will be mostly used as reference for
@@ -194,6 +194,7 @@ class Sheet(GoogleObject):
 
 
 class Block(GoogleObject):
+
     """Recieves a dictionary corresponding to a
     ValueRange in Google Sheets and provides methods related
     to modification and formatting.
@@ -233,9 +234,11 @@ class Block(GoogleObject):
         return True
 
     class Cell(object):
+
         """Represents a Google Sheets Cell, each value
         is initially <unicode>
         """
+
         def __init__(self, block, value):
             self._block = block
             self.value = value

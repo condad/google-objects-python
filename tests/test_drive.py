@@ -6,7 +6,7 @@ import os
 from oauth2client.service_account import ServiceAccountCredentials
 from oauth2client.client import OAuth2Credentials
 
-from google_objects.clients import DriveAPI
+from google_objects import DriveAPI
 from google_objects.drive import File, Permission
 
 
