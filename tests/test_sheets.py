@@ -18,16 +18,6 @@ logger = logging.getLogger(__name__)
 
 
 @pytest.fixture
-def credentials():
-    creds = os.path.expanduser(os.getenv('GOOGLE_CREDENTIALS'))
-    user_email = os.getenv('GOOGLE_EMAIL')
-    scope = os.getenv('SHEETS_SCOPE')
-
-    return ServiceAccountCredentials\
-        .from_json_keyfile_name(creds, scope).create_delegated(user_email)
-
-
-@pytest.fixture
 def client(credentials):
     return SheetsAPI(credentials)
 

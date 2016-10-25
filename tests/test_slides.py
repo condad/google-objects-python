@@ -1,52 +1,39 @@
 import os
-import sys
-
 import pytest
-from oauth2client.service_account import ServiceAccountCredentials
-from oauth2client.client import OAuth2Credentials
 
 from google_objects import SlidesAPI
-from google_objects.utils import find_credentials
 from google_objects.slides import Presentation, Page
-
-
-SCOPES = os.getenv('SLIDES_SCOPE')
-USER_EMAIL = os.getenv('USER_EMAIL')
-API_KEY = os.getenv('API_KEY')
-PRESENTATION = os.getenv('PRESENTATION')
-PAGE = os.getenv('PAGE')
-REGEX = os.getenv('REGEX')
-
-
-@pytest.fixture
-def credentials():
-    creds = find_credentials()
-    return ServiceAccountCredentials \
-        .from_json_keyfile_name(creds, SCOPES).create_delegated(USER_EMAIL)
 
 
 @pytest.fixture
 def client(credentials):
-    api = SlidesAPI(credentials, API_KEY)
+    api_key = os.getenv('API_KEY')
+    api = SlidesAPI(credentials, api_key)
     return api
 
 
-# def test_get_presentation(client):
-#     presentation = client.get_presentation(PRESENTATION)
-#     assert isinstance(presentation, Presentation)
+@pytest.fixture
+def presentation(client):
+    test_presentation = os.getenv('TEST_PRESENTATION')
+    return client.get_presentation(test_presentation)
 
 
-# def test_get_page(client):
-#     page = client.get_page(PRESENTATION, PAGE)
-#     assert isinstance(page, Page)
-#     assert page.read_only
+def test_get_presentation(presentation):
+    assert isinstance(presentation, Presentation)
 
 
-def test_get_matches(client):
-    presentation = client.get_presentation(PRESENTATION)
+def test_get_page(client):
+    test_presentation = os.getenv('TEST_PRESENTATION')
+    page_id = os.getenv('PAGE')
+    page = client.get_page(test_presentation, page_id)
+    assert isinstance(page, Page)
+
+
+def test_get_matches(presentation):
+    regex = os.getenv('REGEX')
 
     with presentation:
-        tags = presentation.get_matches(REGEX)
+        tags = presentation.get_matches(regex)
         # print len(tags) + 'tags'
         for i, tag in enumerate(tags):
             presentation.replace_text(tag, i)

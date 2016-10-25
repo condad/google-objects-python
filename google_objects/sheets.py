@@ -63,7 +63,7 @@ class SheetsAPI(GoogleAPI):
     def push_updates(self, spreadsheet_id, updates):
         spreadsheets = self._resource.spreadsheets()
         spreadsheets.batchUpdate(
-            presentationId = spreadsheet_id,
+            presentationId=spreadsheet_id,
             body={'requests': updates}
         )
         spreadsheets.execute()
@@ -97,8 +97,7 @@ class Spreadsheet(GoogleObject):
         return cls(client, **new_data)
 
     def __iter__(self):
-        for sheet in self.sheets:
-            yield sheet
+        return self.sheets()
 
     def __enter__(self):
         return self
@@ -121,9 +120,9 @@ class Spreadsheet(GoogleObject):
     def title(self, value):
         self._properties['title'] = value
 
-    @property
     def sheets(self):
-        return [Sheet.from_existing(each, self) for each in self._sheets]
+        for sheet in self._sheets:
+            yield Sheet.from_existing(sheet, self)
 
     def named_ranges(self):
         return self._named_ranges

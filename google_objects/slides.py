@@ -9,6 +9,7 @@ Google Slides API
 
 import re
 import logging
+import httplib2
 
 from . import GoogleAPI, GoogleObject
 from .utils import keys_to_snake, set_private_attrs
@@ -39,10 +40,12 @@ class SlidesAPI(GoogleAPI):
 
     def __init__(self, credentials, api_key):
         super(SlidesAPI, self).__init__(credentials)
+
+        # while API still in beta...
         base_url = ('https://slides.googleapis.com/$discovery/rest?'
                         'version=v1beta1&key=' + api_key)
 
-        self._resource = self.build('slides', 'v1beta1', discovery_url=base_url)
+        self._resource = self.build('slides', 'v1beta1', discoveryServiceUrl=base_url)
 
 
     def get_presentation(self, id):
@@ -73,6 +76,7 @@ class SlidesAPI(GoogleAPI):
 
         return Page.from_existing(data)
 
+
     def push_updates(self, presentation_id, updates):
         """Push Update Requests to Presentation API,
         throw errors if necessary.
@@ -98,8 +102,8 @@ class Presentation(GoogleObject):
     """Google Presentation Object,
     holds batch update request lists and
     passes it to its <Client> for execution.
-
     """
+
     def __init__(self, client=None, **kwargs):
         """Class for Presentation object
 
@@ -232,10 +236,9 @@ class Page(GoogleObject):
         return False
 
     def __iter__(self):
-        for element in self.elements:
+        for element in self.elements():
             yield element
 
-    @property
     def elements(self):
         """Generates Page elements recursively"""
 
@@ -314,7 +317,7 @@ class PageElement(GoogleObject):
 
 class Shape(PageElement):
 
-    """Docstring for Shape. """
+    """Docstring for Shape."""
 
     def __init__(self, presentation=None, page=None, **kwargs):
         # set private attrs not done by base class
@@ -453,9 +456,6 @@ class Table(PageElement):
 
 
 """Helper Classes"""
-
-class DELETE_MODES:
-    DELETE_ALL = 'DELETE_ALL'
 
 
 class SlidesUpdate(object):

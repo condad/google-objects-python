@@ -5,21 +5,7 @@ Google Sliders Utility Functions
 
 """
 
-import os
 import re
-
-def find_credentials(name='xyz_creds.json'):
-    """finds credentials within project
-
-    :name: name of credential file
-    :returns: full path to credentials
-    """
-
-    credential_dir = os.path.expanduser('~/lab/google-objects/.credentials')
-    # credential_dir = os.path.join(home_dir, 'lab/google-objects/.credentials')
-    credential_path = os.path.join(credential_dir, name)
-    return credential_path
-
 
 def set_private_attrs(instance, dt):
     """Sets (key, value) pairs of given dictionary
@@ -63,6 +49,7 @@ def list_to_snake(a):
             newArr.append(i)
 
     return newArr
+
 
 def keys_to_snake(dt):
     """recursively changes camel_cased keys on argument to

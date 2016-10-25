@@ -18,12 +18,11 @@ class GoogleAPI(object):
     def __init__(self, credentials):
         self._credentials = credentials
 
-    def build(self, service, version, discovery_url=None):
+    def build(self, service, version, **kwargs):
         """create api specific http resource"""
 
         http = self._credentials.authorize(httplib2.Http())
-        return discovery.build(service, version, http=http, discoveryServiceUrl=discovery_url)
-        # return discovery.build(service, version, http=http)
+        return discovery.build(service, version, http=http, **kwargs)
 
 
 class GoogleObject(object):

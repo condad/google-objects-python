@@ -35,6 +35,7 @@ class DriveAPI(GoogleAPI):
         super(self.__class__, self).__init__(credentials)
         self._resource = self.build('drive', 'v3')
 
+
     def get_file(self, file_id):
         """Returns an initialized
         File Instance.
@@ -49,6 +50,7 @@ class DriveAPI(GoogleAPI):
         ).execute()
 
         return File.from_existing(data, self)
+
 
     def copy_file(self, file_id, file_body):
         """Copy file and place in folder.
@@ -73,7 +75,8 @@ class DriveAPI(GoogleAPI):
 
         return File.from_existing(new_file, self)
 
-    def list_files(self, type=None, fields=['files(id, name)']):
+
+    def list_files(self, type='', fields=['files(id, name)']):
         """Shows basic usage of the Google Drive API.
 
         Creates a Google Drive API service object and outputs the names and IDs
@@ -83,13 +86,13 @@ class DriveAPI(GoogleAPI):
         if hasattr(fields, '__iter__'):
             fields = ', '.join(fields)
 
-        files = self._resource.files()
-        files.list(
+        result = self._resource.files().list(
             q='mimeType=\'{}\''.format(type.lower()),
             pageSize=100,
             fields=fields
-        )
-        files.execute()
+        ).execute()
+
+        files = result.get('files')
 
         return [File.from_existing(each, self) for each in files]
 

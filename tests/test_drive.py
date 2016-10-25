@@ -10,14 +10,24 @@ from google_objects import DriveAPI
 from google_objects.drive import File, Permission
 
 
-@pytest.fixture
-def credentials():
-    creds = os.path.expanduser(os.getenv('GOOGLE_CREDENTIALS'))
-    user_email = os.getenv('GOOGLE_EMAIL')
-    scope = os.getenv('DRIVE_SCOPE')
 
-    return ServiceAccountCredentials\
-        .from_json_keyfile_name(creds, scope).create_delegated(user_email)
+# def _find_credentials(name='xyz_creds.json'):
+#     home_dir = os.path.expanduser('~')
+#     credential_dir = os.path.join(home_dir, 'lab/google-objects/.credentials')
+#     credential_path = os.path.join(credential_dir, name)
+#     return credential_path
+
+
+# SCOPES = 'https://www.googleapis.com/auth/drive'
+# USER_EMAIL = 'team@xyzfoundation.com'
+# FILE = '15SOeUydjJ-IGzBZxPzBmwTAkUXKuje-ciZWWddEcitY'
+
+
+# @pytest.fixture
+# def credentials():
+#     creds = _find_credentials()
+#     return ServiceAccountCredentials \
+#         .from_json_keyfile_name(creds, SCOPES).create_delegated(USER_EMAIL)
 
 
 @pytest.fixture
