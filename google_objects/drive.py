@@ -20,6 +20,7 @@ logger.setLevel(logging.DEBUG)
 # TODO:
     # i/ add greater permissions functionality
     # ii/ change .from_existing to .from_raw
+    # add SKELETON to set attributes to null when not set
 
 
 class DriveAPI(GoogleAPI):
@@ -174,6 +175,14 @@ class File(GoogleObject):
     @property
     def id(self):
         return self._id or None
+
+    @property
+    def name(self):
+        return self._name or None
+
+    @name.setter
+    def name(self, val):
+        self._name = val
 
     @property
     def type(self):
