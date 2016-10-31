@@ -132,7 +132,19 @@ class Spreadsheet(GoogleObject):
         return self.client.get_values(self.id, sheet_range)
 
     def named_ranges(self):
-        return [self.NamedRange(self, each) for each in self._named_ranges]
+        def has_sheet_id(rng):
+            if not 'sheet_id' in rng['range']:
+                print
+                print 'NO ID:', rng
+                print
+                return False
+            print
+            print 'HAS ID:', rng
+            print
+            return True
+
+        return [ self.NamedRange(self, each) for each in filter(has_sheet_id, self._named_ranges) ]
+        # return [ self.NamedRange(self, each) for each in self._named_ranges ]
 
     class NamedRange(object):
         """represents a NamedRange resource, can
@@ -141,7 +153,7 @@ class Spreadsheet(GoogleObject):
 
         def __init__(self, spreadsheet, named_range):
             self.spreadsheet = spreadsheet
-            self.id = named_range.get('named_rage_id')
+            self.id = named_range.get('named_range_id')
             self.name = named_range.get('name')
             self.range = named_range.get('range')
 
@@ -173,14 +185,17 @@ class Spreadsheet(GoogleObject):
         def as_a1(self):
             sheet_name = None
             for sheet in self.spreadsheet.sheets():
+                print
+                print 'SHEET_ID:', self.sheet_id
+                print
                 if self.sheet_id == sheet.id:
                     sheet_name = sheet.title
                     break
 
-            start_col_a1 = chr(self.start_column % 26 + 65)
-            end_col_a1 = chr(self.end_column % 26 + 65)
             start_row_a1 = self.start_row + 1
-            end_row_a1 = self.end_row + 1
+            start_col_a1 = chr(self.start_column % 26 + 65)
+            end_row_a1 = self.end_row
+            end_col_a1 = chr(self.end_column % 26 + 64)
 
             return '\'{}\'!{}{}:{}{}'.format(
                 sheet_name, start_col_a1, start_row_a1,
@@ -189,8 +204,6 @@ class Spreadsheet(GoogleObject):
 
         def get_block(self):
             return self.spreadsheet.get_range(self.as_a1())
-
-
 
 
 class Sheet(GoogleObject):
@@ -276,15 +289,11 @@ class Block(GoogleObject):
 
     def yield_cells(self):
         for row in self._values:
-            for cell in row:
-                yield self.Cell(self.val)
+            for val in row:
+                yield self.Cell(self, val)
 
     def cells(self):
-        cells = []
-        for row in self._values:
-            for cell in row:
-                cells.append(self.Cell(self.val))
-        return cells
+        return [cell for cell in self.yield_cells()]
 
     def rows(self):
         for row in self._values:

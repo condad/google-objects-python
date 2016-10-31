@@ -213,7 +213,7 @@ class File(GoogleObject):
         name and parent folders.
         """
 
-        new = self.as_dict()
+        new = dict()
         new['name'] = name or '{0} | COPY'.format(self.name)
         if parents:
             new['parents'] = parents
