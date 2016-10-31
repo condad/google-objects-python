@@ -77,7 +77,7 @@ class DriveAPI(GoogleAPI):
         return File.from_existing(new_file, self)
 
 
-    def list_files(self, file_type=None, fields=['files(id, name)']):
+    def list_files(self, file_type=None, parents=[], fields=['files(id, name)']):
         """Shows basic usage of the Google Drive API.
 
         Creates a Google Drive API service object and outputs the names and IDs
@@ -88,10 +88,15 @@ class DriveAPI(GoogleAPI):
             fields = ', '.join(fields)
 
 
+        query = ''
         if file_type:
-            query = "mimeType='{}'".format('application/vnd.google-apps.' + file_type.lower())
-        else:
-            query = ''
+            query = query + "mimeType='{}'".format('application/vnd.google-apps.' + file_type.lower())
+        for p in parents:
+            query = query + ' and \'{}\' in parents'.format(p)
+
+        print
+        print 'QUERY:', query
+        print
 
         result = self._resource.files().list(
             q=query,
