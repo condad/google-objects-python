@@ -69,12 +69,7 @@ class SheetsAPI(GoogleAPI):
         spreadsheets.execute()
 
 
-"""
-    Sheets Objects:
-        i/ Spreadsheet
-        ii/ Sheet
-        iii/ Block
-"""
+# objects
 
 class Spreadsheet(GoogleObject):
 
@@ -121,6 +116,9 @@ class Spreadsheet(GoogleObject):
         self._properties['title'] = value
 
     def sheets(self):
+        return [ sheet for sheet in self.yield_sheets() ]
+
+    def yield_sheets(self):
         for sheet in self._sheets:
             yield Sheet.from_existing(sheet, self)
 

@@ -12,9 +12,7 @@ import logging
 from . import GoogleAPI, GoogleObject
 from .utils import keys_to_snake, keys_to_camel
 
-logging.basicConfig()
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
 
 
 # TODO:
@@ -35,6 +33,14 @@ class DriveAPI(GoogleAPI):
         """
         super(self.__class__, self).__init__(credentials)
         self._resource = self.build('drive', 'v3')
+
+
+    def get_about(self, fields=['user']):
+        data = self._resource.about().get(
+            fields=', '.join(fields)
+        ).execute()
+
+        return About.from_existing(data)
 
 
     def get_file(self, file_id):
@@ -87,16 +93,11 @@ class DriveAPI(GoogleAPI):
         if hasattr(fields, '__iter__'):
             fields = ', '.join(fields)
 
-
         query = ''
         if file_type:
             query = query + "mimeType='{}'".format('application/vnd.google-apps.' + file_type.lower())
         for p in parents:
             query = query + ' and \'{}\' in parents'.format(p)
-
-        print
-        print 'QUERY:', query
-        print
 
         result = self._resource.files().list(
             q=query,
@@ -121,11 +122,31 @@ class DriveAPI(GoogleAPI):
         return Permission(**data)
 
 
-"""
-    Drive Objects:
-        i/ File
-        ii/ Permission
-"""
+# objects
+
+class About(GoogleObject):
+
+    """Docstring for User Resource, this is READ ONLY"""
+
+    def __init__(self, **kwargs):
+        super(self.__class__, self).__init__(**kwargs)
+
+    @property
+    def email(self):
+        return self._user['email_address']
+
+    @property
+    def name(self):
+        return self._user['display_name']
+
+    @property
+    def photo(self):
+        return self._user['photo_link']
+
+    @property
+    def permission_id(self):
+        return self._user['permission_id']
+
 
 class File(GoogleObject):
 
@@ -196,7 +217,8 @@ class File(GoogleObject):
     @type.setter
     def type(self, value):
         """ensures type is valid, assigns type to
-        unknown if no argument is given"""
+        unknown if no argument is given
+        """
 
         file_type = value or self._default_type
         file_type = value.lower()
@@ -259,6 +281,7 @@ class File(GoogleObject):
         created.email = kwargs['email']
 
         return created
+
 
 
 class Permission(GoogleObject):

@@ -5,7 +5,7 @@ import httplib2
 from apiclient import discovery
 from apiclient.errors import HttpError
 
-from .utils import set_private_attrs
+from .utils import set_private_attrs, keys_to_snake
 
 
 class GoogleAPI(object):
@@ -25,6 +25,7 @@ class GoogleAPI(object):
         return discovery.build(service, version, http=http, **kwargs)
 
 
+
 class GoogleObject(object):
 
     """Sets private properties on subclasses,
@@ -37,6 +38,13 @@ class GoogleObject(object):
         to private attributes.
         """
         set_private_attrs(self, kwargs)
+
+
+    @classmethod
+    def from_existing(cls, data, *args):
+        new_data = keys_to_snake(data)
+        return cls(*args, **new_data)
+
 
 
 # for ease of importing

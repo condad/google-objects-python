@@ -6,6 +6,18 @@ Google Sliders Utility Functions
 """
 
 import re
+from functools import wraps
+
+
+def handle_key_error(func):
+    @wraps(func)
+    def func_wrapper(self):
+        try:
+            return func(self)
+        except KeyError:
+            return
+    return func_wrapper
+
 
 def set_private_attrs(instance, dt):
     """Sets (key, value) pairs of given dictionary
