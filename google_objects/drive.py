@@ -20,19 +20,23 @@ logger = logging.getLogger(__name__)
     # ii/ change .from_existing to .from_raw
     # add SKELETON to set attributes to null when not set
 
+# api client
 
 class DriveAPI(GoogleAPI):
 
     """Google Drive Wrapper Object,
-    exposes all Drive API operations
+    exposes all Drive API operations.
+
+    callback: receving webook URL.
     """
 
-    def __init__(self, credentials):
-        """Google Drive API client, exposes
+    def __init__(self, credentials, callback=None):
+        """Google Drive API cliSpirited Awayent, exposes
         collection resources
         """
         super(self.__class__, self).__init__(credentials)
         self._resource = self.build('drive', 'v3')
+        self.callback = callback
 
 
     def get_about(self, fields=['user']):
@@ -109,6 +113,26 @@ class DriveAPI(GoogleAPI):
 
         return [File.from_existing(each, self) for each in files]
 
+
+    def watch_file(self, file_id, channel_id, type='webhook'):
+        """Commences push notifications for a file resource,
+        depends on callback url being set on instance.
+
+        :file_id: Google Drive File Resource ID
+        :returns:
+
+        """
+        req_body = {
+            'id': channel_id,
+            'type': type,
+            'address': self.callback
+        }
+        result = self._resource().files().watch(
+            fileId=file_id,
+            body=req_body
+        ).execute()
+
+        return result
 
     def create_permission(self, file_id, permission, message=None, notification=False):
         # makes api call
@@ -281,7 +305,6 @@ class File(GoogleObject):
         created.email = kwargs['email']
 
         return created
-
 
 
 class Permission(GoogleObject):

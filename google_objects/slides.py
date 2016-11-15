@@ -24,6 +24,7 @@ logger.setLevel(logging.DEBUG)
     # ii/ page title and descriptor need to be found and initialized
     # iii/ change .from_existing to .from_raw
     # iv/ add Text nested class for Shape & Table
+    # v/ generate elements from PageElement constructor using __subclasses__
 
 
 class SlidesAPI(GoogleAPI):
@@ -170,7 +171,7 @@ class Presentation(GoogleObject):
     def get_matches(self, regex):
         """Search all Presentation text-based
         elements for matches with regex, returning
-        the list of unique matches.
+        a set of (*text, *element_id) tuples
 
         :regex: a raw regex <String>
         :returns: <Set> of matches
@@ -186,15 +187,17 @@ class Presentation(GoogleObject):
                 # check shape
                 if type(element) is Shape:
                     if element.match(regex):
-                        logger.debug('Shape MATCH')
-                        tags.add(element.text)
+                        logger.debug('Match in SHAPE:', element.id)
+                        tags.add((element.text, element.about()))
 
                 # check all table cells
                 if type(element) is Table:
                     for cell in element.cells():
                         if cell.match(regex):
-                            logger.debug('Cell MATCH')
-                            tags.add(cell.text)
+                            logger.debug(
+                                'Match in TABLE: {}, coords: {}'.format(cell.table.id, cell.location)
+                            )
+                            tags.add((cell.text, cell.about()))
         return list(tags)
 
     def replace_text(self, find, replace, case_sensitive=False):
@@ -269,9 +272,9 @@ class Page(GoogleObject):
             pass
         elif 'video' in element:
             pass
-        elif 'wordArt' in element:
+        elif 'word_art' in element:
             pass
-        elif 'sheetsChart' in element:
+        elif 'sheets_chart' in element:
             pass
 
 
@@ -281,6 +284,8 @@ class PageElement(GoogleObject):
     sets metadata properties and shared object
     operations.
     """
+
+    _types = {'shape', 'table', 'image', 'video', 'word_art', 'sheets_chart'}
 
     # TODO:
     #     i/ title and description not initializing
@@ -314,16 +319,27 @@ class PageElement(GoogleObject):
             SlidesUpdate.delete_object(self._id)
         )
 
+    def about(self):
+        """returns dict returning vital information
+        about page element
+        """
+        return {
+            'kind': self.kind,
+            'id': self.id,
+            'size': self.size
+        }
+
 
 class Shape(PageElement):
 
     """Docstring for Shape."""
 
+    kind = 'SHAPE'
+
     def __init__(self, presentation=None, page=None, **kwargs):
         # set private attrs not done by base class
         shape = kwargs.pop('shape')
         set_private_attrs(self, shape)
-        print vars(self)
 
         super(Shape, self).__init__(presentation, page, **kwargs)
 
@@ -367,6 +383,13 @@ class Shape(PageElement):
     def type(self):
         return self._shape_type
 
+    def about(self):
+        meta = super(self.__class__, self).about()
+        meta.update({
+            'text': self.text
+        })
+        return meta
+
 
 class Table(PageElement):
 
@@ -375,6 +398,8 @@ class Table(PageElement):
     # TODO:
     #     i/ add dynamic row functionality
     #     that works in tandem with corresponding cells
+
+    kind = 'TABLE'
 
     def __init__(self, presentation=None, page=None, **kwargs):
         table = kwargs.pop('table')
@@ -452,6 +477,13 @@ class Table(PageElement):
         @property
         def location(self):
             return (self.row_index, self.column_index)
+
+        def about(self):
+            meta = super(self.table.__class__, self.table).about()
+            meta.update({
+                'text': self.text,
+                'location': self.location
+            })
 
 
 
