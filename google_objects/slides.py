@@ -26,6 +26,8 @@ logger.setLevel(logging.DEBUG)
     # iv/ add Text nested class for Shape & Table
     # v/ generate elements from PageElement constructor using __subclasses__
 
+    # vii/ **have API create method return blank new presentation, all features added via updating
+
 
 class SlidesAPI(GoogleAPI):
 
@@ -48,7 +50,8 @@ class SlidesAPI(GoogleAPI):
 
         self._resource = self.build('slides', 'v1beta1', discoveryServiceUrl=base_url)
 
-
+    def create_presentation(self):
+        pass
     def get_presentation(self, id):
         """Returns a Presentation Object
 
@@ -61,7 +64,6 @@ class SlidesAPI(GoogleAPI):
         ).execute()
 
         return Presentation.from_existing(data, self)
-
 
     def get_page(self, presentation_id, page_id):
         """Returns a Page Object
@@ -76,7 +78,6 @@ class SlidesAPI(GoogleAPI):
         ).execute()
 
         return Page.from_existing(data)
-
 
     def push_updates(self, presentation_id, updates):
         """Push Update Requests to Presentation API,
@@ -177,8 +178,7 @@ class Presentation(GoogleObject):
         :returns: <Set> of matches
 
         """
-        tags = set()
-
+        tags = []
         for page in self.slides():
             for element in page:
                 logger.debug('Checking Element...')
@@ -188,7 +188,7 @@ class Presentation(GoogleObject):
                 if type(element) is Shape:
                     if element.match(regex):
                         logger.debug('Match in SHAPE:', element.id)
-                        tags.add((element.text, element.about()))
+                        tags.append((element.text, element.about()))
 
                 # check all table cells
                 if type(element) is Table:
@@ -197,8 +197,8 @@ class Presentation(GoogleObject):
                             logger.debug(
                                 'Match in TABLE: {}, coords: {}'.format(cell.table.id, cell.location)
                             )
-                            tags.add((cell.text, cell.about()))
-        return list(tags)
+                            tags.append((cell.text, cell.about()))
+        return tags
 
     def replace_text(self, find, replace, case_sensitive=False):
         """Add update request for presentation-wide
@@ -207,6 +207,18 @@ class Presentation(GoogleObject):
         self.add_update(
             SlidesUpdate.replace_all_text(str(find), str(replace), case_sensitive)
         )
+
+    def get_element_by_id(self, element_id):
+        """Retrieves an element within this presentation identified
+        by the argument given. Returns None if no such element is found.
+
+        :element_id: string representing element id
+        :returns: <PageElement> object or None
+
+        """
+        for slide in self.slides():
+            if element_id in slide:
+                return slide[element_id]
 
 
 class Page(GoogleObject):
@@ -233,28 +245,13 @@ class Page(GoogleObject):
         return cls(presentation, **new_data)
 
     @property
+    def id(self):
+        return self._object_id
+    @property
     def read_only(self):
         if not self.presentation:
             return True
         return False
-
-    def __iter__(self):
-        for element in self.elements():
-            yield element
-
-    def elements(self):
-        """Generates Page elements recursively"""
-
-        elem_list = []
-
-        for element in self._page_elements:
-            if 'elementGroup' in element:
-                for child in element.get('children'):
-                    elem_list.append(self.__load_element(child))
-
-            elem_list.append(self.__load_element(element))
-
-        return elem_list
 
     def __load_element(self, element):
         """Returns element object from
@@ -268,6 +265,8 @@ class Page(GoogleObject):
             return Shape(self, **element)
         elif 'table' in element:
             return Table(self, **element)
+        elif 'element_group' in element:
+            return [self.__load_element(each) for each in element['children']]
         elif 'image' in element:
             pass
         elif 'video' in element:
@@ -276,6 +275,66 @@ class Page(GoogleObject):
             pass
         elif 'sheets_chart' in element:
             pass
+
+    def yield_elements(self, __sub_list=[]):
+        """Generates PageElement objects according to type.
+
+        *NEVER pass an argument to this function, the parameter
+        is only to add recursive list flattening with respect to
+        nested element groups.
+        """
+
+        for element in __sub_list or self._page_elements:
+            if isinstance(element, list):
+                self.yield_elements(element)
+
+            yield self.__load_element(element)
+
+    def element_list(self):
+        """Return a list of PageElement instances."""
+        return [element for element in self.yield_elements()]
+
+    def elements(self):
+        """Generates Page elements recursively.
+
+        *DEPRECATED after testing of element_list().
+        """
+
+        elem_list = []
+
+        for element in self._page_elements:
+            if 'elementGroup' in element:
+                for child in element.get('children'):
+                    elem_list.append(self.__load_element(child))
+
+            elem_list.append(self.__load_element(element))
+
+        return elem_list
+
+    def __iter__(self):
+        return self.yield_elements()
+
+    def __contains__(self, element_id):
+        """Checks if this page contains elements referred to
+        by argument.
+
+        :element_id: Unique Google PageElement ID string.
+        :returns: True or False
+
+        """
+        element_set = {each.id for each in self}
+        return element_id in element_set
+
+    def __getitem__(self, element_id):
+        """Returns element within presentation identified
+        by the given argument, raises TypeError
+        if such element isn't present.
+        """
+        for element in self.yield_elements():
+            if element_id == element.id:
+                return element
+
+        raise TypeError
 
 
 class PageElement(GoogleObject):

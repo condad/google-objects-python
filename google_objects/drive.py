@@ -38,14 +38,12 @@ class DriveAPI(GoogleAPI):
         self._resource = self.build('drive', 'v3')
         self.callback = callback
 
-
     def get_about(self, fields=['user']):
         data = self._resource.about().get(
             fields=', '.join(fields)
         ).execute()
 
         return About.from_existing(data)
-
 
     def get_file(self, file_id):
         """Returns an initialized
@@ -61,7 +59,6 @@ class DriveAPI(GoogleAPI):
         ).execute()
 
         return File.from_existing(data, self)
-
 
     def copy_file(self, file_id, file_body):
         """Copy file and place in folder.
@@ -85,7 +82,6 @@ class DriveAPI(GoogleAPI):
         ).execute()
 
         return File.from_existing(new_file, self)
-
 
     def list_files(self, file_type=None, parents=[], fields=['files(id, name)']):
         """Shows basic usage of the Google Drive API.
@@ -127,7 +123,7 @@ class DriveAPI(GoogleAPI):
             'type': type,
             'address': self.callback
         }
-        result = self._resource().files().watch(
+        result = self._resource.files().watch(
             fileId=file_id,
             body=req_body
         ).execute()
