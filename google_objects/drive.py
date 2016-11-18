@@ -7,12 +7,15 @@ Google Drive API
 
 """
 
+import uuid
 import logging
 
 from . import GoogleAPI, GoogleObject
 from .utils import keys_to_snake, keys_to_camel
 
+
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
 
 
 # TODO:
@@ -20,7 +23,6 @@ logger = logging.getLogger(__name__)
     # ii/ change .from_existing to .from_raw
     # add SKELETON to set attributes to null when not set
 
-# api client
 
 class DriveAPI(GoogleAPI):
 
@@ -109,8 +111,7 @@ class DriveAPI(GoogleAPI):
 
         return [File.from_existing(each, self) for each in files]
 
-
-    def watch_file(self, file_id, channel_id, type='webhook'):
+    def watch_file(self, file_id, channel_id, callback=None, type='webhook'):
         """Commences push notifications for a file resource,
         depends on callback url being set on instance.
 
@@ -121,7 +122,7 @@ class DriveAPI(GoogleAPI):
         req_body = {
             'id': channel_id,
             'type': type,
-            'address': self.callback
+            'address': callback or self.callback
         }
         result = self._resource.files().watch(
             fileId=file_id,
@@ -142,7 +143,9 @@ class DriveAPI(GoogleAPI):
         return Permission(**data)
 
 
+
 # objects
+
 
 class About(GoogleObject):
 
@@ -301,6 +304,15 @@ class File(GoogleObject):
         created.email = kwargs['email']
 
         return created
+
+    def start_watching(self, channel_id=str(uuid.uuid4()), **kwargs):
+        """Attempts to start receiving push notifications for this file.
+
+        :channel_id: UUID
+        :returns: Dictionary detailing watch request.
+
+        """
+        return self.client.watch_file(self.id, channel_id, **kwargs)
 
 
 class Permission(GoogleObject):

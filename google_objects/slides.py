@@ -90,13 +90,7 @@ class SlidesAPI(GoogleAPI):
 
 
 
-"""
-    Slides Objects:
-        i/ Presentation
-        ii/ Page
-        iii/ Shape (Page Element)
-        iv/ Table (Page Element)
-"""
+# objects
 
 
 class Presentation(GoogleObject):
@@ -178,7 +172,8 @@ class Presentation(GoogleObject):
         :returns: <Set> of matches
 
         """
-        tags = []
+        # tags = []
+        tags = set()
         for page in self.slides():
             for element in page:
                 logger.debug('Checking Element...')
@@ -188,7 +183,8 @@ class Presentation(GoogleObject):
                 if type(element) is Shape:
                     if element.match(regex):
                         logger.debug('Match in SHAPE:', element.id)
-                        tags.append((element.text, element.about()))
+                        tags.add((element.text, element.about()))
+                        # tags.add(element.text)
 
                 # check all table cells
                 if type(element) is Table:
@@ -197,8 +193,9 @@ class Presentation(GoogleObject):
                             logger.debug(
                                 'Match in TABLE: {}, coords: {}'.format(cell.table.id, cell.location)
                             )
-                            tags.append((cell.text, cell.about()))
-        return tags
+                            # tags.add(cell.text)
+                            tags.add((cell.text, cell.about()))
+        return list(tags)
 
     def replace_text(self, find, replace, case_sensitive=False):
         """Add update request for presentation-wide
@@ -283,7 +280,6 @@ class Page(GoogleObject):
         is only to add recursive list flattening with respect to
         nested element groups.
         """
-
         for element in __sub_list or self._page_elements:
             if isinstance(element, list):
                 self.yield_elements(element)
@@ -383,7 +379,7 @@ class PageElement(GoogleObject):
         about page element
         """
         return {
-            'kind': self.kind,
+            'kind': self.__class__.__name__.upper(),
             'id': self.id,
             'size': self.size
         }
@@ -392,8 +388,6 @@ class PageElement(GoogleObject):
 class Shape(PageElement):
 
     """Docstring for Shape."""
-
-    kind = 'SHAPE'
 
     def __init__(self, presentation=None, page=None, **kwargs):
         # set private attrs not done by base class
@@ -457,8 +451,6 @@ class Table(PageElement):
     # TODO:
     #     i/ add dynamic row functionality
     #     that works in tandem with corresponding cells
-
-    kind = 'TABLE'
 
     def __init__(self, presentation=None, page=None, **kwargs):
         table = kwargs.pop('table')
@@ -546,7 +538,7 @@ class Table(PageElement):
 
 
 
-"""Helper Classes"""
+# update requests
 
 
 class SlidesUpdate(object):

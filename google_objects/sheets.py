@@ -14,7 +14,7 @@ from decimal import Decimal, InvalidOperation
 from . import GoogleAPI, GoogleObject
 from .utils import keys_to_snake
 
-logging.basicConfig()
+
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
@@ -69,7 +69,9 @@ class SheetsAPI(GoogleAPI):
         spreadsheets.execute()
 
 
+
 # objects
+
 
 class Spreadsheet(GoogleObject):
 
@@ -132,16 +134,12 @@ class Spreadsheet(GoogleObject):
     def named_ranges(self):
         def has_sheet_id(rng):
             if not 'sheet_id' in rng['range']:
-                print
-                print 'NO ID:', rng
-                print
+                msg = 'Named Range: {} does not have a sheet_id'.format(rng['named_range_id'])
+                logger.warn(msg)
                 return False
-            print
-            print 'HAS ID:', rng
-            print
             return True
 
-        return [ self.NamedRange(self, each) for each in filter(has_sheet_id, self._named_ranges) ]
+        return [self.NamedRange(self, each) for each in filter(has_sheet_id, self._named_ranges)]
         # return [ self.NamedRange(self, each) for each in self._named_ranges ]
 
     class NamedRange(object):
@@ -183,9 +181,6 @@ class Spreadsheet(GoogleObject):
         def as_a1(self):
             sheet_name = None
             for sheet in self.spreadsheet.sheets():
-                print
-                print 'SHEET_ID:', self.sheet_id
-                print
                 if self.sheet_id == sheet.id:
                     sheet_name = sheet.title
                     break
