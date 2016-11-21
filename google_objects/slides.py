@@ -470,6 +470,8 @@ class Table(PageElement):
             for cell in row.get('table_cells'):
                 yield self.Cell(self, **cell)
 
+    def get_cell(self, row, column):
+        raise NotImplementedError
     class Cell(GoogleObject):
         """Table Cell, only used by table"""
 

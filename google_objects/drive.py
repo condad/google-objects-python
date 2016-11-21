@@ -111,7 +111,7 @@ class DriveAPI(GoogleAPI):
 
         return [File.from_existing(each, self) for each in files]
 
-    def watch_file(self, file_id, channel_id, callback=None, type='webhook'):
+    def watch_file(self, file_id, channel_id=str(uuid.uuid4()), callback=None, type='webhook'):
         """Commences push notifications for a file resource,
         depends on callback url being set on instance.
 
@@ -129,7 +129,7 @@ class DriveAPI(GoogleAPI):
             body=req_body
         ).execute()
 
-        return result
+        return keys_to_snake(result)
 
     def create_permission(self, file_id, permission, message=None, notification=False):
         # makes api call
@@ -305,14 +305,14 @@ class File(GoogleObject):
 
         return created
 
-    def start_watching(self, channel_id=str(uuid.uuid4()), **kwargs):
+    def start_watching(self, **kwargs):
         """Attempts to start receiving push notifications for this file.
 
         :channel_id: UUID
         :returns: Dictionary detailing watch request.
 
         """
-        return self.client.watch_file(self.id, channel_id, **kwargs)
+        return self.client.watch_file(self.id, **kwargs)
 
 
 class Permission(GoogleObject):
