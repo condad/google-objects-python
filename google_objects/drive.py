@@ -119,6 +119,9 @@ class DriveAPI(GoogleAPI):
         :returns:
 
         """
+        if not (callback or self.callback):
+            raise ValueError('Callback URL required to watch resources.')
+
         req_body = {
             'id': channel_id,
             'type': type,

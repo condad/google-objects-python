@@ -132,13 +132,12 @@ class Spreadsheet(GoogleObject):
         return self.client.get_values(self.id, sheet_range)
 
     def get_named_range_by_id(self, rng_id):
-        """return NamedRange instance by id.
+        """Return <NamedRange> instance by id."""
 
-        :rng_id: id string
-        :returns: <NamedRange>
+        for rng in self.named_ranges():
+            if rng_id == rng.id:
+                return rng
 
-        """
-        raise NotImplementedError
     def named_ranges(self):
         def has_sheet_id(rng):
             if not 'sheet_id' in rng['range']:

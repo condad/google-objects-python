@@ -52,7 +52,7 @@ class SlidesAPI(GoogleAPI):
 
     def create_presentation(self):
         pass
-    def get_presentation(self, id):
+    def get_presentation(self, presentation_id):
         """Returns a Presentation Object
 
         :id: Presentation ID
@@ -60,7 +60,7 @@ class SlidesAPI(GoogleAPI):
 
         """
         data = self._resource.presentations().get(
-            presentationId=id
+            presentationId=presentation_id
         ).execute()
 
         return Presentation.from_existing(data, self)
@@ -173,7 +173,7 @@ class Presentation(GoogleObject):
 
         """
         # tags = []
-        tags = set()
+        tags = []
         for page in self.slides():
             for element in page:
                 logger.debug('Checking Element...')
@@ -183,7 +183,7 @@ class Presentation(GoogleObject):
                 if type(element) is Shape:
                     if element.match(regex):
                         logger.debug('Match in SHAPE:', element.id)
-                        tags.add((element.text, element.about()))
+                        tags.append((element.text, element.about()))
                         # tags.add(element.text)
 
                 # check all table cells
@@ -194,8 +194,8 @@ class Presentation(GoogleObject):
                                 'Match in TABLE: {}, coords: {}'.format(cell.table.id, cell.location)
                             )
                             # tags.add(cell.text)
-                            tags.add((cell.text, cell.about()))
-        return list(tags)
+                            tags.append((cell.text, cell.about()))
+        return tags
 
     def replace_text(self, find, replace, case_sensitive=False):
         """Add update request for presentation-wide
@@ -318,7 +318,7 @@ class Page(GoogleObject):
         :returns: True or False
 
         """
-        element_set = {each.id for each in self}
+        element_set = {each.id for each in self.element_list()}
         return element_id in element_set
 
     def __getitem__(self, element_id):
@@ -378,11 +378,13 @@ class PageElement(GoogleObject):
         """returns dict returning vital information
         about page element
         """
-        return {
+        meta = {
             'kind': self.__class__.__name__.upper(),
             'id': self.id,
             'size': self.size
         }
+        logger.debug(meta)
+        return meta
 
 
 class Shape(PageElement):
@@ -438,9 +440,7 @@ class Shape(PageElement):
 
     def about(self):
         meta = super(self.__class__, self).about()
-        meta.update({
-            'text': self.text
-        })
+        meta['text'] = self.text
         return meta
 
 
@@ -471,7 +471,11 @@ class Table(PageElement):
                 yield self.Cell(self, **cell)
 
     def get_cell(self, row, column):
-        raise NotImplementedError
+        """Fetches cell data and returns as object."""
+
+        cell = self._table_rows[row]['table_cells'][column]
+        return self.Cell(self, cell)
+
     class Cell(GoogleObject):
         """Table Cell, only used by table"""
 
@@ -537,6 +541,8 @@ class Table(PageElement):
                 'text': self.text,
                 'location': self.location
             })
+            logger.debug('CELL ABOUT: {}'.format(meta))
+            return meta
 
 
 
