@@ -122,7 +122,10 @@ class Presentation(GoogleObject):
         return self
 
     def __exit__(self, exception_type, exception_value, traceback):
-        self.update()
+        try:
+            self.update()
+        except Exception as e:
+            raise e
 
     def __iter__(self):
         for page in self.slides():
@@ -213,9 +216,10 @@ class Presentation(GoogleObject):
         :returns: <PageElement> object or None
 
         """
-        for slide in self.slides():
-            if element_id in slide:
-                return slide[element_id]
+        for page in self.slides():
+            logger.debug('Page: {}'.format(type(page)))
+            if element_id in page:
+                return page[element_id]
 
 
 class Page(GoogleObject):
@@ -259,9 +263,9 @@ class Page(GoogleObject):
 
         """
         if 'shape' in element:
-            return Shape(self, **element)
+            return Shape(self.presentation, self, **element)
         elif 'table' in element:
-            return Table(self, **element)
+            return Table(self.presentation, self, **element)
         elif 'element_group' in element:
             return [self.__load_element(each) for each in element['children']]
         elif 'image' in element:
@@ -318,8 +322,12 @@ class Page(GoogleObject):
         :returns: True or False
 
         """
-        element_set = {each.id for each in self.element_list()}
-        return element_id in element_set
+        element_id_set = set()
+        for each in self.yield_elements():
+            if each:
+                element_id_set.add(each.id)
+
+        return element_id in element_id_set
 
     def __getitem__(self, element_id):
         """Returns element within presentation identified
@@ -423,7 +431,7 @@ class Shape(PageElement):
             self.update(SlidesUpdate.delete_text(self.id))
 
         self.update(
-            SlidesUpdate.insert_text(self.id, self.text)
+            SlidesUpdate.insert_text(self.id, value)
         )
 
         self._text['raw_text'] = value
@@ -473,8 +481,8 @@ class Table(PageElement):
     def get_cell(self, row, column):
         """Fetches cell data and returns as object."""
 
-        cell = self._table_rows[row]['table_cells'][column]
-        return self.Cell(self, cell)
+        cell_data = self._table_rows[row]['table_cells'][column]
+        return self.Cell(self, **cell_data)
 
     class Cell(GoogleObject):
         """Table Cell, only used by table"""
@@ -502,13 +510,17 @@ class Table(PageElement):
         def text(self, value):
             if not hasattr(self, '_text') or self._text:
                 self.table.update(
-                    SlidesUpdate.delete_text(self.table.id)
+                    SlidesUpdate.delete_text(
+                        self.table.id,
+                        self.row_index,
+                        self.column_index
+                    )
                 )
 
             self.table.update(
                 SlidesUpdate.insert_text(
                     self.table.id,
-                    self.text,
+                    value,
                     self.row_index,
                     self.column_index
                 )
