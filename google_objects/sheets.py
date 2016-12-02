@@ -140,6 +140,7 @@ class Spreadsheet(GoogleObject):
 
     def named_ranges(self):
         def has_sheet_id(rng):
+            logger.debug('Range: {}'.format(rng))
             if not 'sheet_id' in rng['range']:
                 msg = 'Named Range: {} does not have a sheet_id'.format(rng['name'])
                 logger.warn(msg)
