@@ -45,13 +45,12 @@ def test_spreadsheet(spreadsheet):
         assert isinstance(block, Block)
 
         # test cell types
-        for row in block:
-            for cell in row:
-                assert isinstance(cell, Block.Cell)
-                value = str(cell.value)
-                print value
-                logger.debug(type(value))
-                logger.debug(value)
+        for cell in block:
+            assert isinstance(cell, Block.Cell)
+            value = str(cell.value)
+            print value
+            logger.debug(type(value))
+            logger.debug(value)
 
 
 def test_sheets(spreadsheet):
@@ -66,21 +65,11 @@ def test_sheets(spreadsheet):
         assert isinstance(block, Block)
 
         # test cell types
-        for row in block:
-            assert hasattr(row, '__iter__')
-
-            for cell in row:
-                assert isinstance(cell, Block.Cell)
+        for cell in block:
+            assert isinstance(cell, Block.Cell)
 
 
 def test_ranges(spreadsheet):
-        numerical_range = os.getenv('TEST_RANGE_NUMERICAL')
-        non_numerical_range = os.getenv('TEST_RANGE_NON_NUMERICAL')
-
-        block_num = spreadsheet.get_range(numerical_range)
-        assert isinstance(block_num, Block)
-        assert block_num.is_numerical
-
-        block_non_num = spreadsheet.get_range(non_numerical_range)
-        assert isinstance(block_non_num, Block)
-        assert not block_non_num.is_numerical
+        for named_rng in spreadsheet.named_ranges():
+            vals = named_rng.values()
+            assert isinstance(vals, Block)

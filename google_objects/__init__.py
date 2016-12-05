@@ -39,7 +39,6 @@ class GoogleObject(object):
         """
         set_private_attrs(self, kwargs)
 
-
     @classmethod
     def from_existing(cls, data, *args):
         new_data = keys_to_snake(data)

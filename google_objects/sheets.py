@@ -49,7 +49,6 @@ class SheetsAPI(GoogleAPI):
 
         return Spreadsheet.from_existing(data, self)
 
-
     def get_values(self, spreadsheet_id, range_name):
         """Initialize a new block and return it"""
 
@@ -94,7 +93,7 @@ class Spreadsheet(GoogleObject):
         return cls(client, **new_data)
 
     def __iter__(self):
-        return self.sheets()
+        return self.yield_sheets()
 
     def __enter__(self):
         return self
@@ -118,7 +117,7 @@ class Spreadsheet(GoogleObject):
         self._properties['title'] = value
 
     def sheets(self):
-        return [ sheet for sheet in self.yield_sheets() ]
+        return [sheet for sheet in self.yield_sheets()]
 
     def yield_sheets(self):
         for sheet in self._sheets:
@@ -169,22 +168,22 @@ class Spreadsheet(GoogleObject):
         @property
         def start_row(self):
             if 'start_row_index' in self.range:
-                return self.range['start_row_index']
+                return self.range.get('start_row_index', '')
 
         @property
         def end_row(self):
             if 'end_row_index' in self.range:
-                return self.range['end_row_index']
+                return self.range.get('end_row_index', '')
 
         @property
         def start_column(self):
             if 'start_column_index' in self.range:
-                return self.range['start_column_index']
+                return self.range.get('start_column_index', '')
 
         @property
         def end_column(self):
             if 'end_column_index' in self.range:
-                return self.range['end_column_index']
+                return self.range.get('end_column_index', '')
 
         def as_a1(self):
             sheet_name = None
@@ -203,7 +202,11 @@ class Spreadsheet(GoogleObject):
                 end_col_a1, end_row_a1
             )
 
+        def values(self):
+            return self.get_block()
+
         def get_block(self):
+            """DEPRECATED soon in favour of .values/1"""
             return self.spreadsheet.get_range(self.as_a1())
 
 

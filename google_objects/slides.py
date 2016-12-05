@@ -9,12 +9,11 @@ Google Slides API
 
 import re
 import logging
-import httplib2
 
 from . import GoogleAPI, GoogleObject
 from .utils import keys_to_snake, set_private_attrs
 
-logging.basicConfig()
+
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
@@ -555,6 +554,15 @@ class Table(PageElement):
             })
             logger.debug('CELL ABOUT: {}'.format(meta))
             return meta
+
+
+class TextContent(GoogleObject):
+
+    """Represents Text Elements found only in Shape and
+    Table Cell objects, introduced with the official release"""
+
+    def __init__(self, **kwargs):
+        super(GoogleObject, self).__init__(**kwargs)
 
 
 
