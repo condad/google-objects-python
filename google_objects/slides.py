@@ -124,8 +124,10 @@ class Presentation(GoogleObject):
     def __exit__(self, exception_type, exception_value, traceback):
         try:
             self.update()
+            return True
         except Exception as e:
-            raise e
+            logger.error(e)
+            return False
 
     def __iter__(self):
         for page in self.slides():

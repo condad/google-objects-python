@@ -49,7 +49,6 @@ class SheetsAPI(GoogleAPI):
 
         return Spreadsheet.from_existing(data, self)
 
-
     def get_values(self, spreadsheet_id, range_name):
         """Initialize a new block and return it"""
 
@@ -94,7 +93,7 @@ class Spreadsheet(GoogleObject):
         return cls(client, **new_data)
 
     def __iter__(self):
-        return self.sheets()
+        return self.yield_sheets()
 
     def __enter__(self):
         return self
