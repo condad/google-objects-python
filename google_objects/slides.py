@@ -14,9 +14,7 @@ import httplib2
 from . import GoogleAPI, GoogleObject
 from .utils import keys_to_snake, set_private_attrs
 
-logging.basicConfig()
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+log = logging.getLogger(__name__)
 
 
 # TODO:
@@ -126,7 +124,7 @@ class Presentation(GoogleObject):
             self.update()
             return True
         except Exception as e:
-            logger.error(e)
+            log.error(e)
             return False
 
     def __iter__(self):
@@ -181,13 +179,13 @@ class Presentation(GoogleObject):
         tags = []
         for page in self.slides():
             for element in page:
-                logger.debug('Checking Element...')
-                logger.debug('Type:' + str(type(element)))
+                log.debug('Checking Element...')
+                log.debug('Type:' + str(type(element)))
 
                 # check shape
                 if type(element) is Shape:
                     if element.match(regex):
-                        logger.debug('Match in SHAPE:', element.id)
+                        log.debug('Match in SHAPE:', element.id)
                         tags.append((element.text, element.about()))
                         # tags.add(element.text)
 
@@ -195,7 +193,7 @@ class Presentation(GoogleObject):
                 if type(element) is Table:
                     for cell in element.cells():
                         if cell.match(regex):
-                            logger.debug(
+                            log.debug(
                                 'Match in TABLE: {}, coords: {}'.format(cell.table.id, cell.location)
                             )
                             # tags.add(cell.text)
@@ -219,7 +217,7 @@ class Presentation(GoogleObject):
 
         """
         for page in self.slides():
-            logger.debug('Page: {}'.format(type(page)))
+            log.debug('Page: {}'.format(type(page)))
             if element_id in page:
                 return page[element_id]
 
@@ -393,7 +391,7 @@ class PageElement(GoogleObject):
             'id': self.id,
             'size': self.size
         }
-        logger.debug(meta)
+        log.debug(meta)
         return meta
 
 
@@ -555,7 +553,7 @@ class Table(PageElement):
                 'text': self.text,
                 'location': self.location
             })
-            logger.debug('CELL ABOUT: {}'.format(meta))
+            log.debug('Cell description: {}'.format(meta))
             return meta
 
 

@@ -12,9 +12,7 @@ from oauth2client.client import OAuth2Credentials
 from google_objects import SheetsAPI
 from google_objects.sheets import Spreadsheet, Sheet, Block
 
-
-logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
 
 @pytest.fixture
@@ -44,14 +42,9 @@ def test_spreadsheet(spreadsheet):
         block = sheet.values()
         assert isinstance(block, Block)
 
-        # test cell types
-        for row in block:
-            for cell in row:
-                assert isinstance(cell, Block.Cell)
-                value = str(cell.value)
-                print value
-                logger.debug(type(value))
-                logger.debug(value)
+        # test cells
+        for cell in block:
+            assert isinstance(cell, Block.Cell)
 
 
 def test_sheets(spreadsheet):
@@ -65,22 +58,8 @@ def test_sheets(spreadsheet):
         block = sheet.values()
         assert isinstance(block, Block)
 
-        # test cell types
-        for row in block:
+        # test rows
+        for row in block.rows():
             assert hasattr(row, '__iter__')
-
             for cell in row:
                 assert isinstance(cell, Block.Cell)
-
-
-def test_ranges(spreadsheet):
-        numerical_range = os.getenv('TEST_RANGE_NUMERICAL')
-        non_numerical_range = os.getenv('TEST_RANGE_NON_NUMERICAL')
-
-        block_num = spreadsheet.get_range(numerical_range)
-        assert isinstance(block_num, Block)
-        assert block_num.is_numerical
-
-        block_non_num = spreadsheet.get_range(non_numerical_range)
-        assert isinstance(block_non_num, Block)
-        assert not block_non_num.is_numerical

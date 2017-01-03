@@ -14,9 +14,7 @@ from decimal import Decimal, InvalidOperation
 from . import GoogleAPI, GoogleObject
 from .utils import keys_to_snake
 
-
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+log = logging.getLogger(__name__)
 
 
 # TODO:
@@ -139,10 +137,10 @@ class Spreadsheet(GoogleObject):
 
     def named_ranges(self):
         def has_sheet_id(rng):
-            logger.debug('Range: {}'.format(rng))
+            log.debug('Range: {}'.format(rng))
             if not 'sheet_id' in rng['range']:
                 msg = 'Named Range: {} does not have a sheet_id'.format(rng['name'])
-                logger.warn(msg)
+                log.warn(msg)
                 return False
             return True
 

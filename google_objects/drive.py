@@ -13,9 +13,7 @@ import logging
 from . import GoogleAPI, GoogleObject
 from .utils import keys_to_snake, keys_to_camel
 
-
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+log = logging.getLogger(__name__)
 
 
 # TODO:
