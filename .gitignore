@@ -4,7 +4,8 @@
 *.py[cod]
 __pycache__/
 .ropeproject/
-
+dist/
+build/
 .credentials
 *_creds.json
 .cache/
