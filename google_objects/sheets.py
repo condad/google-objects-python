@@ -57,6 +57,24 @@ class SheetsAPI(GoogleAPI):
 
         return Block.from_existing(data, client=self)
 
+    def append_values(self, spreadsheet_id, rng, values):
+        """Append Values to Range.
+
+        :spreadsheet: Google Spreadsheet ID
+        :range: Range in A1 Notation
+        :returns: None
+
+        """
+
+        data = self._resource.spreadsheets().values().append(
+            spreadsheetId=spreadsheet_id,
+            range=rng,
+            valueInputOption='USER_ENTERED',
+            body={'values': values}
+        ).execute()
+
+        return Block.from_existing(data, client=self)
+
     def push_updates(self, spreadsheet_id, updates):
         spreadsheets = self._resource.spreadsheets()
         spreadsheets.batchUpdate(
@@ -128,6 +146,13 @@ class Spreadsheet(GoogleObject):
         """
         return self.client.get_values(self.id, sheet_range)
 
+    def get_named_range_by_name(self, rng_name):
+        """Return <NamedRange> instance by id."""
+
+        for rng in self.named_ranges():
+            if rng_name == rng.name:
+                return rng
+
     def get_named_range_by_id(self, rng_id):
         """Return <NamedRange> instance by id."""
 
@@ -136,16 +161,25 @@ class Spreadsheet(GoogleObject):
                 return rng
 
     def named_ranges(self):
-        def has_sheet_id(rng):
-            log.debug('Range: {}'.format(rng))
+        def set_sheet_id(rng):
+            """if sheet_id isn't present, set it to the ID of the first sheet"""
             if not 'sheet_id' in rng['range']:
-                msg = 'Named Range: {} does not have a sheet_id'.format(rng['name'])
-                log.warn(msg)
-                return False
-            return True
+                rng['range']['sheet_id'] = 0
 
-        return [self.NamedRange(self, each) for each in filter(has_sheet_id, self._named_ranges)]
-        # return [ self.NamedRange(self, each) for each in self._named_ranges ]
+            return rng
+
+        return [self.NamedRange(self, each) for each in map(set_sheet_id, self._named_ranges)]
+
+    def __getitem__(self, sheet_id):
+        """Returns sheet within presentation identified
+        by the given argument, raises TypeError
+        if such element isn't present.
+        """
+        for sheet in self.yield_sheets():
+            if sheet_id == sheet.id:
+                return sheet
+
+        raise TypeError
 
     class NamedRange(object):
         """represents a NamedRange resource, can
@@ -162,6 +196,11 @@ class Spreadsheet(GoogleObject):
         def sheet_id(self):
             if 'sheet_id' in self.range:
                 return self.range['sheet_id']
+
+        @property
+        def sheet_name(self):
+            sheet = self.spreadsheet[self.sheet_id]
+            return sheet.title
 
         @property
         def start_row(self):
