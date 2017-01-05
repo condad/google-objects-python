@@ -60,7 +60,7 @@ class DriveAPI(GoogleAPI):
 
         return File.from_existing(data, self)
 
-    def copy_file(self, file_id, file_body):
+    def copy_file(self, file_id, file_body=None):
         """Copy file and place in folder.
 
         :file_id: drive file id
@@ -235,6 +235,10 @@ class File(GoogleObject):
         self._name = val
 
     @property
+    def url(self):
+        return self._web_view_link
+
+    @property
     def type(self):
         return self._mime_type
 
@@ -284,25 +288,22 @@ class File(GoogleObject):
 
         return permissions
 
-    def add_permission(self, **kwargs):
+    def add_permission(self, email, **kwargs):
         """initializes new permission objects and
         pushes it, returns
         and adds it
         to queue
         """
 
-        if not 'email' in kwargs:
-            raise ValueError
-
+        kwargs.update({'email': email})
         permission = Permission.from_existing(kwargs, self)
 
         created = self.client.create_permission(
-            file_id=self.id,
-            permission=permission.as_dict()
+            self.id, permission.as_dict()
         )
 
         created.file = self
-        created.email = kwargs['email']
+        created.email = email
 
         return created
 
