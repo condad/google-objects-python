@@ -27,11 +27,11 @@ class SheetsAPI(GoogleAPI):
 
     """Creates a Google Sheets Resource"""
 
-    def __init__(self, credentials):
-        """Google Drive API client, exposes
+    def __init__(self, credentials=None, api_key=None, callback=None):
+        """Google Sheets API client, exposes
         collection resources
         """
-        super(self.__class__, self).__init__(credentials)
+        super(self.__class__, self).__init__(credentials, api_key)
         self._resource = self.build('sheets', 'v4')
 
     def get_spreadsheet(self, id):

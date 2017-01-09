@@ -30,11 +30,11 @@ class DriveAPI(GoogleAPI):
     callback: receving webook URL.
     """
 
-    def __init__(self, credentials, callback=None):
-        """Google Drive API cliSpirited Awayent, exposes
+    def __init__(self, credentials=None, api_key=None, callback=None):
+        """Google Drive API client, exposes
         collection resources
         """
-        super(self.__class__, self).__init__(credentials)
+        super(self.__class__, self).__init__(credentials, api_key)
         self._resource = self.build('drive', 'v3')
         self.callback = callback
 
@@ -132,7 +132,7 @@ class DriveAPI(GoogleAPI):
 
         return keys_to_snake(result)
 
-    def create_permission(self, file_id, permission, message=None, notification=False):
+    def create_permission(self, file_id, permission, message=None, notification=True):
         # makes api call
         data = self._resource.permissions().create(
             fileId=file_id,
@@ -144,9 +144,7 @@ class DriveAPI(GoogleAPI):
         return Permission(**data)
 
 
-
 # objects
-
 
 class About(GoogleObject):
 
@@ -297,9 +295,11 @@ class File(GoogleObject):
 
         kwargs.update({'email': email})
         permission = Permission.from_existing(kwargs, self)
+        message = kwargs.get('message')
+        notification = kwargs.get('notification')
 
         created = self.client.create_permission(
-            self.id, permission.as_dict()
+            self.id, permission.serialize(), message, notification
         )
 
         created.file = self
@@ -315,6 +315,9 @@ class File(GoogleObject):
 
         """
         return self.client.watch_file(self.id, **kwargs)
+
+    def serialize(self):
+        return keys_to_camel(vars(self))
 
 
 class Permission(GoogleObject):
@@ -391,12 +394,12 @@ class Permission(GoogleObject):
         if len(value.split('@')) is 2:
             self._email_address = value
 
-    def as_dict(self):
+    def serialize(self):
         """convert __dict__ keys to camel case, get
         intersection of this and _properties
         """
 
-        return_dict = keys_to_camel(self.__dict__)
+        return_dict = keys_to_camel(vars(self))
         keys = return_dict.keys()
         key_set = set(keys)
 

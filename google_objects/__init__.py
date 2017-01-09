@@ -6,7 +6,8 @@ import httplib2
 from apiclient import discovery
 # from apiclient.errors import HttpError
 
-from .utils import set_private_attrs, keys_to_snake
+from .utils import set_private_attrs
+from .utils import keys_to_snake, keys_to_camel
 
 
 # sets default logging handler to avoid "No handler found" warnings.
@@ -28,13 +29,18 @@ class GoogleAPI(object):
     as well.
 
     """
-    def __init__(self, credentials):
-        self._credentials = credentials
+    def __init__(self, credentials=None, api_key=None):
+        self.credentials = credentials
+        self.api_key = api_key
 
     def build(self, service, version, **kwargs):
         """Create an API specific HTTP resource."""
 
-        http = self._credentials.authorize(httplib2.Http())
+        if self.api_key:
+            return discovery.build(service, version,
+                                   developerKey=self.api_key, **kwargs)
+
+        http = self.credentials.authorize(httplib2.Http())
         return discovery.build(service, version, http=http, **kwargs)
 
 
@@ -51,11 +57,13 @@ class GoogleObject(object):
         """
         set_private_attrs(self, kwargs)
 
-
     @classmethod
     def from_existing(cls, data, *args):
         new_data = keys_to_snake(data)
         return cls(*args, **new_data)
+
+    def serialize(self):
+        return keys_to_camel(vars(self))
 
 
 from .drive import DriveAPI

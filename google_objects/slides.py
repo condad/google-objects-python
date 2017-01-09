@@ -39,8 +39,8 @@ class SlidesAPI(GoogleAPI):
     are handled by its <Presentation> object.
     """
 
-    def __init__(self, credentials, api_key):
-        super(SlidesAPI, self).__init__(credentials)
+    def __init__(self, credentials=None, api_key=None):
+        super(SlidesAPI, self).__init__(credentials, api_key)
 
         # while API still in beta...
         base_url = ('https://slides.googleapis.com/$discovery/rest?'
