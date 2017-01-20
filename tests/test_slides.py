@@ -3,22 +3,18 @@ import pytest
 
 from google_objects import SlidesAPI
 from google_objects.slides import Presentation, Page
+from google_objects.slides import PageElement, Shape, Table
 
 
 @pytest.fixture
 def client(credentials):
-    api_key = os.getenv('API_KEY')
-    api = SlidesAPI(credentials, api_key)
+    api = SlidesAPI(credentials)
     return api
 
 
-@pytest.fixture
-def presentation(client):
+def test_get_presentation(client):
     test_presentation = os.getenv('TEST_PRESENTATION')
-    return client.get_presentation(test_presentation)
-
-
-def test_get_presentation(presentation):
+    presentation = client.get_presentation(test_presentation)
     assert isinstance(presentation, Presentation)
 
 
@@ -27,6 +23,22 @@ def test_get_page(client):
     page_id = os.getenv('PAGE')
     page = client.get_page(test_presentation, page_id)
     assert isinstance(page, Page)
+
+
+@pytest.fixture
+def presentation(client):
+    test_presentation = os.getenv('TEST_PRESENTATION')
+    return client.get_presentation(test_presentation)
+
+
+def test_elements(presentation):
+    for page in presentation:
+        assert isinstance(page, Page)
+        for element in page:
+            assert isinstance(element, PageElement)
+            if isinstance(element, Shape or Table):
+                if '_text' in vars(element):
+                    pass
 
 
 def test_get_matches(presentation):

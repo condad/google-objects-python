@@ -41,12 +41,7 @@ class SlidesAPI(GoogleAPI):
 
     def __init__(self, credentials=None, api_key=None):
         super(SlidesAPI, self).__init__(credentials, api_key)
-
-        # while API still in beta...
-        base_url = ('https://slides.googleapis.com/$discovery/rest?'
-                        'version=v1beta1&key=' + api_key)
-
-        self._resource = self.build('slides', 'v1beta1', discoveryServiceUrl=base_url)
+        self._resource = self.build('slides', 'v1')
 
     def create_presentation(self):
         pass
@@ -235,7 +230,6 @@ class Page(GoogleObject):
 
     def __init__(self, presentation=None, **kwargs):
         self.presentation = presentation
-
         super(Page, self).__init__(**kwargs)
 
     @classmethod
@@ -263,19 +257,28 @@ class Page(GoogleObject):
 
         """
         if 'shape' in element:
+            log.debug('Shape %s loaded.', element['object_id'])
             return Shape(self.presentation, self, **element)
         elif 'table' in element:
+            log.debug('Table %s loaded.', element['object_id'])
             return Table(self.presentation, self, **element)
         elif 'element_group' in element:
+            log.debug('Element Group %s loaded.', element['object_id'])
             return [self.__load_element(each) for each in element['children']]
+
+        # TODO: Implement the following constructors
         elif 'image' in element:
-            pass
+            log.debug('Image %s loaded.', element['object_id'])
+            return PageElement(self.presentation, self, **element)
         elif 'video' in element:
-            pass
+            log.debug('Video %s loaded.', element['object_id'])
+            return PageElement(self.presentation, self, **element)
         elif 'word_art' in element:
-            pass
+            log.debug('Word Art %s loaded.', element['object_id'])
+            return PageElement(self.presentation, self, **element)
         elif 'sheets_chart' in element:
-            pass
+            log.debug('Sheets Chart %s loaded.', element['object_id'])
+            return PageElement(self.presentation, self, **element)
 
     def yield_elements(self, __sub_list=[]):
         """Generates PageElement objects according to type.
