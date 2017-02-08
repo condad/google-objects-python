@@ -51,6 +51,8 @@ class GoogleObject(object):
     values.
     """
 
+    _properties = set()
+
     def __init__(self, **kwargs):
         """Set Resource corresponding **kwargs
         to private attributes.
@@ -63,7 +65,19 @@ class GoogleObject(object):
         return cls(*args, **new_data)
 
     def serialize(self):
-        return keys_to_camel(vars(self))
+        """convert __dict__ keys to camel case, get
+        intersection of this and _properties
+        """
+
+        return_dict = keys_to_camel(vars(self))
+        keys = return_dict.keys()
+
+        # return only defined properties
+        excess_keys = set(keys) - self._properties
+        for key in excess_keys:
+            del return_dict[key]
+
+        return return_dict
 
 
 from .drive import DriveAPI

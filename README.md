@@ -1,5 +1,6 @@
 # Google Objects
-:snake: Pythonic, OO Google Slides, Sheets, and Drive interactions. Currently only supports Python 2.7. 
+Thin, pythonic OO wrapper around Google's "google-api-python-client" library.
+Currently only supports Python 2.7. :snake::snake::snake:
 
 ## Installation
 ```bash

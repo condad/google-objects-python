@@ -93,6 +93,13 @@ class Presentation(GoogleObject):
     passes it to its <Client> for execution.
     """
 
+    _properties = {
+        'presentationId',
+        'layouts',
+        'slides',
+        'masters',
+    }
+
     def __init__(self, client=None, **kwargs):
         """Class for Presentation object
 
@@ -228,6 +235,10 @@ class Page(GoogleObject):
         :kwargs // <Dict> representing API Page Resource
     """
 
+    _properties = {
+        'pageElements'
+    }
+
     def __init__(self, presentation=None, **kwargs):
         self.presentation = presentation
         super(Page, self).__init__(**kwargs)
@@ -293,26 +304,9 @@ class Page(GoogleObject):
 
             yield self.__load_element(element)
 
-    def element_list(self):
+    def elements(self):
         """Return a list of PageElement instances."""
         return [element for element in self.yield_elements()]
-
-    def elements(self):
-        """Generates Page elements recursively.
-
-        *DEPRECATED after testing of element_list().
-        """
-
-        elem_list = []
-
-        for element in self._page_elements:
-            if 'elementGroup' in element:
-                for child in element.get('children'):
-                    elem_list.append(self.__load_element(child))
-
-            elem_list.append(self.__load_element(element))
-
-        return elem_list
 
     def __iter__(self):
         return self.yield_elements()

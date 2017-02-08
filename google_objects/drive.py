@@ -274,9 +274,9 @@ class File(GoogleObject):
         return self.client.copy_file(self.id, new)
 
     def list_permissions(self):
-        """returns list of permission for this
+        """Returns list of permission for this
         drive file, return empty if caller is
-        not authorized to share
+        not authorized to share.
         """
 
         permissions = []
@@ -315,9 +315,6 @@ class File(GoogleObject):
 
         """
         return self.client.watch_file(self.id, **kwargs)
-
-    def serialize(self):
-        return keys_to_camel(vars(self))
 
 
 class Permission(GoogleObject):
@@ -393,20 +390,3 @@ class Permission(GoogleObject):
     #     add update call if _id is present
         if len(value.split('@')) is 2:
             self._email_address = value
-
-    def serialize(self):
-        """convert __dict__ keys to camel case, get
-        intersection of this and _properties
-        """
-
-        return_dict = keys_to_camel(vars(self))
-        keys = return_dict.keys()
-        key_set = set(keys)
-
-        excess_key_set = key_set - self._properties
-        excess_keys = list(excess_key_set)
-
-        for key in excess_keys:
-            del return_dict[key]
-
-        return return_dict
