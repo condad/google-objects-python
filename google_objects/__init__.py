@@ -4,7 +4,6 @@ import logging
 import httplib2
 
 from apiclient import discovery
-# from apiclient.errors import HttpError
 
 from .utils import set_private_attrs
 from .utils import keys_to_snake, keys_to_camel

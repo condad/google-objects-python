@@ -4,6 +4,7 @@ import pytest
 from google_objects import SlidesAPI
 from google_objects.slides import Presentation, Page
 from google_objects.slides import PageElement, Shape, Table
+from google_objects.slides import TextContent
 
 
 @pytest.fixture
@@ -36,9 +37,21 @@ def test_elements(presentation):
         assert isinstance(page, Page)
         for element in page:
             assert isinstance(element, PageElement)
-            if isinstance(element, Shape or Table):
+            if isinstance(element, Table):
+                for cell in element.cells():
+                    assert isinstance(cell.text, TextContent)
+                    if '_text' in vars(cell):
+                        for text in cell.text:
+                            text = cell.text
+                        for piece in text:
+                            assert piece.end_index > 0
+
+            if isinstance(element, Shape):
                 if '_text' in vars(element):
-                    pass
+                    text = element.text
+                    assert isinstance(text, TextContent)
+                    for piece in text:
+                        assert piece.end_index > 0
 
 
 def test_get_matches(presentation):
@@ -46,6 +59,7 @@ def test_get_matches(presentation):
 
     with presentation:
         tags = presentation.get_matches(regex)
-        # print len(tags) + 'tags'
         for i, tag in enumerate(tags):
-            presentation.replace_text(tag, i)
+            text, info = tag
+            presentation.replace_text(text, i)
+        # for i, tag in enumerate(tags):

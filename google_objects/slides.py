@@ -11,6 +11,8 @@ import re
 import logging
 import httplib2
 
+from apiclient.errors import HttpError
+
 from . import GoogleAPI, GoogleObject
 from .utils import keys_to_snake, set_private_attrs
 
@@ -76,7 +78,7 @@ class SlidesAPI(GoogleAPI):
         """Push Update Requests to Presentation API,
         throw errors if necessary.
         """
-        presentation = self._resource.presentations().batchUpdate(
+        self._resource.presentations().batchUpdate(
             presentationId=presentation_id,
             body={'requests': updates}
         ).execute()
@@ -121,13 +123,12 @@ class Presentation(GoogleObject):
     def __enter__(self):
         return self
 
-    def __exit__(self, exception_type, exception_value, traceback):
+    def __exit__(self, ex_type, ex_val, traceback):
         try:
             self.update()
             return True
-        except Exception as e:
-            log.error(e)
-            return False
+        except HttpError as e:
+            raise e
 
     def __iter__(self):
         for page in self.slides():
@@ -181,25 +182,25 @@ class Presentation(GoogleObject):
         tags = []
         for page in self.slides():
             for element in page:
-                log.debug('Checking Element...')
-                log.debug('Type:' + str(type(element)))
-
                 # check shape
-                if type(element) is Shape:
-                    if element.match(regex):
-                        log.debug('Match in SHAPE:', element.id)
-                        tags.append((element.text, element.about()))
-                        # tags.add(element.text)
+                if isinstance(element, Shape):
+                    if element.text:
+                        for text in element.text:
+                            if text.match(regex):
+                                log.debug('Match in SHAPE:', element.id)
+                                tags.append((text.text, element.about()))
+                                # tags.add(element.text)
 
                 # check all table cells
-                if type(element) is Table:
+                if isinstance(element, Table):
                     for cell in element.cells():
-                        if cell.match(regex):
-                            log.debug(
-                                'Match in TABLE: {}, coords: {}'.format(cell.table.id, cell.location)
-                            )
-                            # tags.add(cell.text)
-                            tags.append((cell.text, cell.about()))
+                        for text in cell.text:
+                            if text.match(regex):
+                                log.debug('Match in TABLE: %s, coords: %s',
+                                    cell.table.id, cell.location
+                                )
+                                # tags.add(cell.text)
+                                tags.append((text.text, cell.about()))
         return tags
 
     def replace_text(self, find, replace, case_sensitive=False):
@@ -403,41 +404,15 @@ class Shape(PageElement):
 
         super(Shape, self).__init__(presentation, page, **kwargs)
 
-    def match(self, regex):
-        """Returns True or False if regular expression
-        matches the text inside.
-        """
-        if self.text and re.match(regex, self.text):
-            return True
-        else:
-            return False
-
     @property
     def text(self):
-        if hasattr(self, '_text') and 'raw_text' in self._text:
-            return self._text['raw_text']
-
-    @property
-    def rendered_text(self):
-        if hasattr(self, '_text') and 'rendered_text' in self._text:
-            return self._text['rendered_text']
-
-    @text.setter
-    def text(self, value):
-        if not self._text:
-            self.update(SlidesUpdate.delete_text(self.id))
-
-        self.update(
-            SlidesUpdate.insert_text(self.id, value)
-        )
-
-        self._text['raw_text'] = value
-
-    @text.deleter
-    def text(self):
-        self.update(
-            SlidesUpdate.delete_text()
-        )
+        if hasattr(self, '_text'):
+            return TextContent(
+                self.presentation,
+                self.page,
+                self,
+                **self._text
+            )
 
     @property
     def type(self):
@@ -486,51 +461,17 @@ class Table(PageElement):
 
         def __init__(self, table, **kwargs):
             self.table = table
-
             super(Table.Cell, self).__init__(**kwargs)
-
-        def match(self, regex):
-            """Returns True or False if regular expression
-            matches the text inside.
-            """
-
-            if hasattr(self, '_text') and re.match(regex, self.text):
-                return True
-            return False
 
         @property
         def text(self):
-            if hasattr(self, '_text') and 'raw_text' in self._text:
-                return self._text['raw_text']
-
-        @text.setter
-        def text(self, value):
-            if not hasattr(self, '_text') or self._text:
-                self.table.update(
-                    SlidesUpdate.delete_text(
-                        self.table.id,
-                        self.row_index,
-                        self.column_index
-                    )
+            if hasattr(self, '_text'):
+                return TextContent(
+                    self.table.presentation,
+                    self.table.page,
+                    self.table,
+                    **self._text
                 )
-
-            self.table.update(
-                SlidesUpdate.insert_text(
-                    self.table.id,
-                    value,
-                    self.row_index,
-                    self.column_index
-                )
-            )
-
-            self._text = value
-
-        @text.deleter
-        def text(self):
-            self._table.update(
-                SlidesUpdate.delete_text()
-            )
-            self._text = None
 
         @property
         def row_index(self):
@@ -554,6 +495,76 @@ class Table(PageElement):
             return meta
 
 
+class TextContent(GoogleObject):
+
+    """Docstring for TextElement. """
+
+    _properties = {'textElements, lists'}
+
+    def __init__(self, presentation=None, page=None, element=None, **kwargs):
+        self.presentation = presentation
+        self.page = page
+        self.element = element
+
+        super(TextContent, self).__init__(**kwargs)
+
+    def __iter__(self):
+        for text_element in self._text_elements:
+            yield self.TextElement(self, self.element, **text_element)
+
+    class TextElement(GoogleObject):
+
+        _properties = {
+            'startIndex',
+            'endIndex',
+            'paragraphMarker',
+            'textRun',
+            'autoText'
+        }
+
+        def __init__(self, text_content, page_element, **kwargs):
+            self.text_content = text_content
+            self.page_element = page_element
+            super(TextContent.TextElement, self).__init__(**kwargs)
+
+        @property
+        def start_index(self):
+            return self._start_index
+
+        @property
+        def end_index(self):
+            return self._end_index
+
+        @property
+        def text(self):
+            if hasattr(self, '_text_run'):
+                return self._text_run['content']
+
+        @text.setter
+        def text(self, value):
+            if not self._text:
+                self.page_element.update(SlidesUpdate.delete_text(self.id))
+
+            self.page_element.update(
+                SlidesUpdate.insert_text(self.id, value)
+            )
+
+            self._text['raw_text'] = value
+
+        @text.deleter
+        def text(self):
+            self.page_element.update(
+                SlidesUpdate.delete_text()
+            )
+
+        def match(self, regex):
+            """Returns True or False if regular expression
+            matches the text inside.
+            """
+            if self.text and re.match(regex, self.text):
+                return True
+            else:
+                return False
 
 # update requests
 
@@ -576,9 +587,11 @@ class SlidesUpdate(object):
     def replace_all_text(find, replace, case_sensitive=False):
         return {
             'replaceAllText': {
-                'findText': find,
                 'replaceText': replace,
-                'matchCase': case_sensitive
+                'containsText': {
+                    'text': find,
+                    'matchCase': case_sensitive
+                }
             }
         }
 
