@@ -19,6 +19,11 @@ from .utils import keys_to_snake, set_private_attrs
 log = logging.getLogger(__name__)
 
 
+"""
+REMOVE ABOUT() methods on Shape and Table
+REMOVE GET_MATCHES() on Presentation
+"""
+
 # TODO:
     # i/ ensure all cell data reflects table row insertion and deletion
     # ii/ page title and descriptor need to be found and initialized
@@ -420,7 +425,7 @@ class Shape(PageElement):
 
     def about(self):
         meta = super(self.__class__, self).about()
-        meta['text'] = self.text
+        meta['text'] = self.text.text
         return meta
 
 
@@ -488,7 +493,6 @@ class Table(PageElement):
         def about(self):
             meta = super(self.table.__class__, self.table).about()
             meta.update({
-                'text': self.text,
                 'location': self.location
             })
             log.debug('Cell description: {}'.format(meta))
@@ -543,19 +547,30 @@ class TextContent(GoogleObject):
         @text.setter
         def text(self, value):
             if not self._text:
-                self.page_element.update(SlidesUpdate.delete_text(self.id))
+                self.page_element.update(
+                    SlidesUpdate.delete_text(
+                        self.page_element.id,
+                        row=getattr(self.page_element, 'start_index', None),
+                        col=getattr(self.page_element, 'end_index', None),
+                        start=self.start_index,
+                        end=self.end_index
+                    )
+                )
 
-            self.page_element.update(
-                SlidesUpdate.insert_text(self.id, value)
+            update_request = SlidesUpdate.insert_text(
+                self.id, value, start=self.start_index
             )
+            self.page_element.update(update_request)
 
-            self._text['raw_text'] = value
+            self._text_run['content'] = value
 
         @text.deleter
         def text(self):
-            self.page_element.update(
-                SlidesUpdate.delete_text()
+            obj_id = self.page_element.id
+            update_request = SlidesUpdate.delete_text(
+                obj_id, start=self.start_index, end=self.end_index
             )
+            self.page_element.update(update_request)
 
         def match(self, regex):
             """Returns True or False if regular expression
@@ -565,6 +580,8 @@ class TextContent(GoogleObject):
                 return True
             else:
                 return False
+
+
 
 # update requests
 
@@ -596,7 +613,7 @@ class SlidesUpdate(object):
         }
 
     @staticmethod
-    def insert_text(obj_id, text, row=None, column=None, insertion_index=0):
+    def insert_text(obj_id, text, row=None, column=None, start=0):
         return {
             'insertText': {
                 'objectId': obj_id,
@@ -605,20 +622,24 @@ class SlidesUpdate(object):
                     'rowIndex': row,
                     'columnIndex': column
                 },
-                'insertionIndex': insertion_index
+                'insertionIndex': start
 
             }
         }
 
     @staticmethod
-    def delete_text(obj_id, row=None, column=None, mode='DELETE_ALL'):
+    def delete_text(obj_id, row=None, col=None, start=None, end=None,  kind='FIXED_RANGE'):
         return {
             'deleteText': {
                 'objectId': obj_id,
                 'cellLocation': {
                     'rowIndex': row,
-                    'columnIndex': column
+                    'columnIndex': col
                 },
-                'deleteMode': mode
+                'text_range': {
+                    'startIndex': start,
+                    'endIndex': end
+
+                },
             }
         }
