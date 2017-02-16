@@ -20,7 +20,6 @@ log = logging.getLogger(__name__)
 
 
 """
-REMOVE ABOUT() methods on Shape and Table
 REMOVE GET_MATCHES() on Presentation
 """
 
@@ -174,39 +173,10 @@ class Presentation(GoogleObject):
     def layouts(self):
         return [Page(self, **slide) for slide in self._layouts]
 
-    def get_matches(self, regex):
-        """Search all Presentation text-based
-        elements for matches with regex, returning
-        a set of (*text, *element_id) tuples
-
-        :regex: a raw regex <String>
-        :returns: <Set> of matches
-
-        """
-        # tags = []
-        tags = []
+    def elements(self):
         for page in self.slides():
             for element in page:
-                # check shape
-                if isinstance(element, Shape):
-                    if element.text:
-                        for text in element.text:
-                            if text.match(regex):
-                                log.debug('Match in SHAPE:', element.id)
-                                tags.append((text.text, element.about()))
-                                # tags.add(element.text)
-
-                # check all table cells
-                if isinstance(element, Table):
-                    for cell in element.cells():
-                        for text in cell.text:
-                            if text.match(regex):
-                                log.debug('Match in TABLE: %s, coords: %s',
-                                    cell.table.id, cell.location
-                                )
-                                # tags.add(cell.text)
-                                tags.append((text.text, cell.about()))
-        return tags
+                yield element
 
     def replace_text(self, find, replace, case_sensitive=False):
         """Add update request for presentation-wide
@@ -385,18 +355,6 @@ class PageElement(GoogleObject):
             SlidesUpdate.delete_object(self._id)
         )
 
-    def about(self):
-        """returns dict returning vital information
-        about page element
-        """
-        meta = {
-            'kind': self.__class__.__name__.upper(),
-            'id': self.id,
-            'size': self.size
-        }
-        log.debug(meta)
-        return meta
-
 
 class Shape(PageElement):
 
@@ -422,11 +380,6 @@ class Shape(PageElement):
     @property
     def type(self):
         return self._shape_type
-
-    def about(self):
-        meta = super(self.__class__, self).about()
-        meta['text'] = self.text.text
-        return meta
 
 
 class Table(PageElement):
@@ -489,14 +442,6 @@ class Table(PageElement):
         @property
         def location(self):
             return (self.row_index, self.column_index)
-
-        def about(self):
-            meta = super(self.table.__class__, self.table).about()
-            meta.update({
-                'location': self.location
-            })
-            log.debug('Cell description: {}'.format(meta))
-            return meta
 
 
 class TextContent(GoogleObject):
