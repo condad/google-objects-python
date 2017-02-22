@@ -376,7 +376,7 @@ class Permission(GoogleObject):
 
     @email.setter
     def email(self, value):
-    # TODO:
-    #     add update call if _id is present
+        # TODO:
+        #     add update call if _id is present
         if len(value.split('@')) is 2:
             self._email_address = value

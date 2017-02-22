@@ -30,8 +30,6 @@ REMOVE GET_MATCHES() on Presentation
     # iv/ add Text nested class for Shape & Table
     # v/ generate elements from PageElement constructor using __subclasses__
 
-    # vii/ **have API create method return blank new presentation, all features added via updating
-
 
 class SlidesAPI(GoogleAPI):
 
@@ -49,8 +47,6 @@ class SlidesAPI(GoogleAPI):
         super(SlidesAPI, self).__init__(credentials, api_key)
         self._resource = self.build('slides', 'v1')
 
-    def create_presentation(self):
-        pass
     def get_presentation(self, presentation_id):
         """Returns a Presentation Object
 
