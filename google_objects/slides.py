@@ -526,6 +526,8 @@ class TextContent(GoogleObject):
             else:
                 return False
 
+        def __str__(self):
+            print self.text
 
 
 # update requests

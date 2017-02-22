@@ -274,17 +274,7 @@ class File(GoogleObject):
         return self.client.copy_file(self.id, new)
 
     def list_permissions(self):
-        """Returns list of permission for this
-        drive file, return empty if caller is
-        not authorized to share.
-        """
-
-        permissions = []
-
-        for permission in self._permissions:
-            permissions.append(Permission(self, **permission))
-
-        return permissions
+        return [Permission(self, **each) for each in self._permissions]
 
     def add_permission(self, email, **kwargs):
         """initializes new permission objects and

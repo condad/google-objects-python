@@ -388,3 +388,6 @@ class Block(GoogleObject):
             if self.value and re.match(regex, self.value):
                 return True
             return False
+
+        def __str__(self):
+            return self.value
