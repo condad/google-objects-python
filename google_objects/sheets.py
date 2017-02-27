@@ -22,6 +22,7 @@ log = logging.getLogger(__name__)
     # ii/ page title and descriptor need to be found and initialized
     # iii/ change .from_existing to .from_raw
 
+def grid_to_a1():
 
 class SheetsAPI(GoogleAPI):
 
@@ -78,14 +79,10 @@ class SheetsAPI(GoogleAPI):
     def push_updates(self, spreadsheet_id, updates):
         spreadsheets = self._resource.spreadsheets()
         spreadsheets.batchUpdate(
-            presentationId=spreadsheet_id,
+            spreadsheetId=spreadsheet_id,
             body={'requests': updates}
-        )
-        spreadsheets.execute()
-
-
-
-# objects
+        ).execute()
+        # spreadsheets.execute()
 
 
 class Spreadsheet(GoogleObject):
@@ -133,7 +130,7 @@ class Spreadsheet(GoogleObject):
         self._properties['title'] = value
 
     def sheets(self):
-        return [ sheet for sheet in self.yield_sheets() ]
+        return [sheet for sheet in self.yield_sheets()]
 
     def yield_sheets(self):
         for sheet in self._sheets:
@@ -329,12 +326,17 @@ class Block(GoogleObject):
             for val in row:
                 yield self.Cell(self, val)
 
+    @property
     def cells(self):
         return [cell for cell in self.yield_cells()]
 
-    def rows(self):
+    def yield_rows(self):
         for row in self._values:
             yield [self.Cell(self, val) for val in row]
+
+    @property
+    def rows(self):
+        return [row for row in self.yield_rows()]
 
     def map(self, func):
         """Returns <Decimal> of block sum"""
@@ -389,5 +391,31 @@ class Block(GoogleObject):
                 return True
             return False
 
-        def __str__(self):
-            return self.value
+
+class SheetsUpdate(object):
+
+    """creates google-api-wrapper ready batchUpdate
+    request dictionaries
+    """
+
+    @staticmethod
+    def format_row(sheet_id, start, end, red=0, green=0, blue=0):
+        return {
+            "repeatCell": {
+                "range": {
+                    "sheetId": sheet_id,
+                    "startRowIndex": start,
+                    "endRowIndex": end
+                },
+                "cell": {
+                    "userEnteredFormat": {
+                        "backgroundColor": {
+                            "red": red,
+                            "green": green,
+                            "blue": blue
+                        }
+                    }
+                },
+                "fields": "userEnteredFormat(backgroundColor)"
+            }
+        }

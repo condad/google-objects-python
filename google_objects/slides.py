@@ -9,7 +9,6 @@ Google Slides API
 
 import re
 import logging
-import httplib2
 
 from apiclient.errors import HttpError
 
@@ -82,10 +81,6 @@ class SlidesAPI(GoogleAPI):
             presentationId=presentation_id,
             body={'requests': updates}
         ).execute()
-
-
-
-# objects
 
 
 class Presentation(GoogleObject):
@@ -524,9 +519,6 @@ class TextContent(GoogleObject):
 
         def __str__(self):
             print self.text
-
-
-# update requests
 
 
 class SlidesUpdate(object):

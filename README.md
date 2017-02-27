@@ -10,7 +10,7 @@ Currently supports Python 2.7 :snake::snake::snake:
 ## Usage
 Requires a valid Google API Credentials object from Google's excellent oauth2lib library. For more information, visit [here](https://developers.google.com/identity/protocols/OAuth2).
  
-### Google Drive
+### Google Drive v3
 
 - [x] Retrieve drive 'About' information:
 
@@ -62,7 +62,7 @@ Requires a valid Google API Credentials object from Google's excellent oauth2lib
 	print permission.role, permission.type, permission.email
 ```
 
-### Google Slides
+### Google Slides v1
 
 - [x] Retrieve presentation and loop through elements:
 
@@ -105,7 +105,7 @@ Requires a valid Google API Credentials object from Google's excellent oauth2lib
 
 ```
 
-### Google Sheets
+### Google Sheets v4
 
 - [x] Retrieve spreadsheet and loop through sheets:
 

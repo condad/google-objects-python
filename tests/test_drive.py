@@ -42,10 +42,6 @@ def test_permissions(drive_file):
         type='user',
     )
 
-    # test properties
-    print 'as dict:'
-    print permission.__dict__
-
     assert hasattr(permission, 'id')
     assert hasattr(permission, 'email')
     assert hasattr(permission, 'role')
