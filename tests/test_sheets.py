@@ -59,7 +59,7 @@ def test_sheets(spreadsheet):
         assert isinstance(block, Block)
 
         # test rows
-        for row in block.rows():
+        for row in block.rows:
             assert hasattr(row, '__iter__')
             for cell in row:
                 assert isinstance(cell, Block.Cell)
