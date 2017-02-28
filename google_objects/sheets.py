@@ -22,8 +22,20 @@ log = logging.getLogger(__name__)
     # ii/ page title and descriptor need to be found and initialized
     # iii/ change .from_existing to .from_raw
 
-def grid_to_a1():
-    pass
+
+def _grid_to_a1(sheet_name, start, end):
+    start_row, start_col = start
+    end_row, end_col = end
+
+    start_row_a1 = start_row + 1
+    start_col_a1 = chr(start_col % 26 + 65)
+    end_row_a1 = end_row
+    end_col_a1 = chr(end_col % 26 + 64)
+
+    return '\'{}\'!{}{}:{}{}'.format(
+        sheet_name, start_col_a1, start_row_a1,
+        end_col_a1, end_row_a1
+    )
 
 
 class SheetsAPI(GoogleAPI):
@@ -60,6 +72,16 @@ class SheetsAPI(GoogleAPI):
 
         return Block.from_existing(data, client=self)
 
+    def update_values(self, spreadsheet_id, range_name, values, format='RAW'):
+        data = self._resource.spreadsheets().values().update(
+            spreadsheetId=spreadsheet_id,
+            range=range_name,
+            valueInputOption=format,
+            body={'values': values}
+        ).execute()
+
+        return data
+
     def append_values(self, spreadsheet_id, rng, values):
         """Append Values to Range.
 
@@ -84,7 +106,6 @@ class SheetsAPI(GoogleAPI):
             spreadsheetId=spreadsheet_id,
             body={'requests': updates}
         ).execute()
-        # spreadsheets.execute()
 
 
 class Spreadsheet(GoogleObject):
@@ -228,15 +249,9 @@ class Spreadsheet(GoogleObject):
                     sheet_name = sheet.title
                     break
 
-            start_row_a1 = self.start_row + 1
-            start_col_a1 = chr(self.start_column % 26 + 65)
-            end_row_a1 = self.end_row
-            end_col_a1 = chr(self.end_column % 26 + 64)
-
-            return '\'{}\'!{}{}:{}{}'.format(
-                sheet_name, start_col_a1, start_row_a1,
-                end_col_a1, end_row_a1
-            )
+            start = (self.start_row, self.start_column)
+            end = (self.end_row, self.end_column)
+            return _grid_to_a1(sheet_name, start, end)
 
         def get_block(self):
             return self.spreadsheet.get_range(self.as_a1())
@@ -323,22 +338,43 @@ class Block(GoogleObject):
     def __iter__(self):
         return self.yield_cells()
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, ex_type, ex_val, tb):
+        self.update()
+
+    def update(self):
+        self.client.update_values(self.spreadsheet.id, self._range, self.raw_data)
+
     def yield_cells(self):
-        for row in self._values:
-            for val in row:
-                yield self.Cell(self, val)
+        for row in self.yield_rows():
+            for cell in row:
+                yield cell
 
     @property
     def cells(self):
         return [cell for cell in self.yield_cells()]
 
     def yield_rows(self):
-        for row in self._values:
-            yield [self.Cell(self, val) for val in row]
+        for i, row in enumerate(self._values):
+            yield [self.Cell(self, val, (i, j)) for j, val in enumerate(row)]
 
     @property
     def rows(self):
         return [row for row in self.yield_rows()]
+
+    @property
+    def raw_data(self):
+        data = []
+        for row in self.yield_rows():
+            data.append([cell.value for cell in row])
+
+        return data
+
+    @property
+    def range(self):
+        return self._range
 
     def map(self, func):
         """Returns <Decimal> of block sum"""
@@ -361,15 +397,26 @@ class Block(GoogleObject):
         is initially <unicode>
         """
 
-        def __init__(self, block, value):
-            self._block = block
-            self.value = value
+        def __init__(self, block, value, location):
+            self.block = block
+            self._value = value
+            self.location = location
+            self.row = location[0]
+            self.col = location[1]
 
         def __repr__(self):
             return self.__str__()
 
         def __str__(self):
             return self.value.encode('utf-8').strip()
+        @property
+        def value(self):
+            return self._value
+
+        @value.setter
+        def value(self, val):
+            self.block._values[self.row][self.col] = val
+            self._value = val
 
         @property
         def is_numerical(self):
