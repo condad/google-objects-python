@@ -28,6 +28,7 @@ class GoogleAPI(object):
     as well.
 
     """
+
     def __init__(self, credentials=None, api_key=None):
         self.credentials = credentials
         self.api_key = api_key

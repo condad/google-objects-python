@@ -518,7 +518,7 @@ class TextContent(GoogleObject):
                 return False
 
         def __str__(self):
-            print self.text
+            return self.text
 
 
 class SlidesUpdate(object):

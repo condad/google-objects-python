@@ -405,10 +405,13 @@ class Block(GoogleObject):
             self.col = location[1]
 
         def __repr__(self):
-            return self.__str__()
+            return str(self)
 
         def __str__(self):
-            return self.value.encode('utf-8').strip()
+            if isinstance(self.value, unicode):
+                return self.value.encode('utf-8').strip()
+            return str(self.value)
+
         @property
         def value(self):
             return self._value
