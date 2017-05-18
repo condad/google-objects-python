@@ -135,10 +135,11 @@ class Spreadsheet(GoogleObject):
         return self
 
     def __exit__(self, exception_type, exception_value, traceback):
-        if self.__updates:
-            self.client.push_updates(self._id, self._updates)
-            # TODO: add success handlers
-            del self._updates[:]
+        # if self.__updates:
+            # self.client.push_updates(self._id, self._updates)
+            # # TODO: add success handlers
+            # del self._updates[:]
+        self.update()
 
     @property
     def id(self):
@@ -189,6 +190,12 @@ class Spreadsheet(GoogleObject):
             return rng
 
         return [self.NamedRange(self, each) for each in map(set_sheet_id, self._named_ranges)]
+
+    def update(self):
+        if self.__updates:
+            self.client.push_updates(self._id, self._updates)
+            # TODO: add success handlers
+            del self._updates[:]
 
     def __getitem__(self, sheet_id):
         """Returns sheet within presentation identified
