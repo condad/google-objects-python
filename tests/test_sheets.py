@@ -17,7 +17,7 @@ log = logging.getLogger(__name__)
 
 @pytest.fixture
 def client(credentials):
-    return SheetsAPI(credentials)
+    return SheetsAPI.from_service_account(*credentials)
 
 
 @pytest.fixture

@@ -12,7 +12,7 @@ from google_objects.drive import File, Permission
 
 @pytest.fixture
 def client(credentials):
-    return DriveAPI(credentials)
+    return DriveAPI.from_service_account(*credentials)
 
 
 def test_file_list(client):

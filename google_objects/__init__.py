@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import os
 import logging
 import httplib2
 
@@ -19,6 +20,15 @@ except ImportError:
             pass
 
 logging.getLogger(__name__).addHandler(NullHandler())
+
+SCOPES = {
+    'drive',
+    'spreadsheets'
+}
+
+
+def _gen_scopes(scopes):
+    return ['https://www.googleapis.com/auth/' + each for each in scopes]
 
 
 class GoogleAPI(object):
@@ -42,6 +52,15 @@ class GoogleAPI(object):
 
         http = self.credentials.authorize(httplib2.Http())
         return discovery.build(service, version, http=http, **kwargs)
+
+    @classmethod
+    def from_service_account(cls, creds_path, scope=SCOPES, user=None):
+        from oauth2client.service_account import ServiceAccountCredentials as S
+
+        creds_path = os.path.expanduser(creds_path)
+        creds = S.from_json_keyfile_name(creds_path, _gen_scopes(scope))
+        creds = creds.create_delegated(user)
+        return cls(creds)
 
 
 class GoogleObject(object):

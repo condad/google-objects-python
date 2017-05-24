@@ -95,6 +95,7 @@ class SheetsAPI(GoogleAPI):
             spreadsheetId=spreadsheet_id,
             range=rng,
             valueInputOption='USER_ENTERED',
+            insertDataOption='INSERT_ROWS',
             body={'values': values}
         ).execute()
 

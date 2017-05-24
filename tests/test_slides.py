@@ -9,8 +9,7 @@ from google_objects.slides import TextContent
 
 @pytest.fixture
 def client(credentials):
-    api = SlidesAPI(credentials)
-    return api
+    return SlidesAPI.from_service_account(*credentials)
 
 
 def test_get_presentation(client):
