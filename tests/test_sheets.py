@@ -3,11 +3,7 @@
 import pytest
 
 import os
-import sys
 import logging
-
-from oauth2client.service_account import ServiceAccountCredentials
-from oauth2client.client import OAuth2Credentials
 
 from google_objects import SheetsAPI
 from google_objects.sheets import Spreadsheet, Sheet, Block
@@ -42,10 +38,6 @@ def test_spreadsheet(spreadsheet):
         block = sheet.values()
         assert isinstance(block, Block)
 
-        # test cells
-        for cell in block:
-            assert isinstance(cell, Block.Cell)
-
 
 def test_sheets(spreadsheet):
     for sheet in spreadsheet:
@@ -61,5 +53,3 @@ def test_sheets(spreadsheet):
         # test rows
         for row in block.rows:
             assert hasattr(row, '__iter__')
-            for cell in row:
-                assert isinstance(cell, Block.Cell)

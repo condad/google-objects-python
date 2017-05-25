@@ -353,7 +353,10 @@ class Block(GoogleObject):
         self.update()
 
     def update(self):
-        self.client.update_values(self.spreadsheet.id, self._range, self.raw_data)
+        self.client.update_values(self.spreadsheet.id, self._range, self.values)
+
+    def append(self, data):
+        self.client.append_values(self.spreadsheet.id, self._range, data)
 
     def yield_cells(self):
         for row in self.yield_rows():
@@ -365,91 +368,31 @@ class Block(GoogleObject):
         return [cell for cell in self.yield_cells()]
 
     def yield_rows(self):
-        for i, row in enumerate(self._values):
-            yield [self.Cell(self, val, (i, j)) for j, val in enumerate(row)]
+        for row in self._values:
+            yield row
 
     @property
     def rows(self):
         return [row for row in self.yield_rows()]
 
     @property
-    def raw_data(self):
-        data = []
-        for row in self.yield_rows():
-            data.append([cell.value for cell in row])
+    def values(self):
+        return self._values
 
-        return data
+    @property
+    def raw_data(self):
+        # legacy, will be deprecated soon
+        return self.values
 
     @property
     def range(self):
         return self._range
 
-    def map(self, func):
-        """Returns <Decimal> of block sum"""
-        for row in self._rows:
-            for cell in row:
-                cell.value = func(cell)
+    def __getitem__(self, key):
+        return self._values[key]
 
-    @property
-    def is_numerical(self):
-        for row in self._values:
-            for val in row:
-                cell = self.Cell(self, val)
-                if not cell.is_numerical:
-                    return False
-        return True
-
-    class Cell(object):
-
-        """Represents a Google Sheets Cell, each value
-        is initially <unicode>
-        """
-
-        def __init__(self, block, value, location):
-            self.block = block
-            self._value = value
-            self.location = location
-            self.row = location[0]
-            self.col = location[1]
-
-        def __repr__(self):
-            return str(self)
-
-        def __str__(self):
-            if isinstance(self.value, unicode):
-                return self.value.encode('utf-8').strip()
-            return str(self.value)
-
-        @property
-        def value(self):
-            return self._value
-
-        @value.setter
-        def value(self, val):
-            self.block._values[self.row][self.col] = val
-            self._value = val
-
-        @property
-        def is_numerical(self):
-            """Determines if value is a number, removes
-            '$', ',', '.' in case of financial formatting.
-            """
-            try:
-                Decimal(self.value)
-                return True
-            except InvalidOperation:
-                return False
-
-        def make_numerical(self):
-            self.value = re.sub(r'[^\d.]', '', self.value)
-
-        def match(self, regex):
-            """Returns True or False if regular expression
-            matches the text inside.
-            """
-            if self.value and re.match(regex, self.value):
-                return True
-            return False
+    def __setitem__(self, key, item):
+        self._values[key] = item
 
 
 class SheetsUpdate(object):

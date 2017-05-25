@@ -59,7 +59,9 @@ class GoogleAPI(object):
 
         creds_path = os.path.expanduser(creds_path)
         creds = S.from_json_keyfile_name(creds_path, _gen_scopes(scope))
-        creds = creds.create_delegated(user)
+        if user:
+            creds = creds.create_delegated(user)
+
         return cls(creds)
 
 
