@@ -157,6 +157,24 @@ class Spreadsheet(GoogleObject):
     def sheets(self):
         return [sheet for sheet in self.yield_sheets()]
 
+    def get_sheet_by_id(self, sheet_id):
+        """Returns sheet within presentation identified
+        by the given argument, raises TypeError
+        if such element isn't present.
+        """
+        for sheet in self.yield_sheets():
+            if sheet_id == sheet.id:
+                return sheet
+
+        raise ValueError
+
+    def get_sheet_by_name(self, name):
+        for sheet in self.yield_sheets():
+            if name == sheet.title:
+                return sheet
+
+        raise ValueError
+
     def yield_sheets(self):
         for sheet in self._sheets:
             yield Sheet.from_existing(sheet, self)
@@ -198,16 +216,14 @@ class Spreadsheet(GoogleObject):
             # TODO: add success handlers
             del self._updates[:]
 
-    def __getitem__(self, sheet_id):
-        """Returns sheet within presentation identified
-        by the given argument, raises TypeError
-        if such element isn't present.
-        """
-        for sheet in self.yield_sheets():
-            if sheet_id == sheet.id:
-                return sheet
-
-        raise TypeError
+    def __getitem__(self, key):
+        try:
+            if key.isdigit():
+                return self.get_sheet_by_id(key)
+            else:
+                return self.get_sheet_by_name(key)
+        except ValueError:
+            raise TypeError('Sheet not found')
 
     class NamedRange(object):
         """represents a NamedRange resource, can
@@ -309,6 +325,10 @@ class Sheet(GoogleObject):
     def title(self):
         return self._properties.get('title')
 
+    @property
+    def name(self):
+        return self.title
+
     @title.setter
     def title(self, value):
         self._properties['title'] = value
@@ -344,7 +364,7 @@ class Block(GoogleObject):
         return cls(client, spreadsheet, **new_data)
 
     def __iter__(self):
-        return self.yield_cells()
+        return self.yield_rows()
 
     def __enter__(self):
         return self
