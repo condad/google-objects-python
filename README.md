@@ -33,18 +33,18 @@ Requires a valid Google API Credentials object from Google's excellent oauth2lib
 
 ```python
   files_by_type = {
-      'slides': gdrive.list_files('presentation'),
+			'slides': gdrive.list_files('presentation'),
       'folders': gdrive.list_files('folder'),
       'spreadsheets': gdrive.list_files('spreadsheets'),
   }
 
   for file in files_by_type['folders']:
-    print file.id
-    print file.name
+			print file.id
+			print file.name
 
   for file in files_by_type['spreadsheets']:
-    # prints list of parent folder IDs
-    print file.parents
+			# prints list of parent folder IDs
+			print file.parents
 
   # ...
 ```
@@ -74,11 +74,11 @@ Requires a valid Google API Credentials object from Google's excellent oauth2lib
 
 	# print slides attributes
 	for slide in presentation:
-		print slide.id
+			print slide.id
 
-		for element in slide: # equivalent to 'for element in presentation.elements()' 	
-			print element.type 
-			# Shape, Table, etc
+			for element in slide: # equivalent to 'for element in presentation.elements()' 	
+					print element.type 
+					# Shape, Table, etc
 	
 ```
 
@@ -87,7 +87,7 @@ Requires a valid Google API Credentials object from Google's excellent oauth2lib
 ```python
 	shape = presentation.get_element_by_id('SHAPE_ID')
 	for segment in shape.text:
-		print segment.text
+			print segment.text
 
 ```
 
@@ -96,12 +96,12 @@ Requires a valid Google API Credentials object from Google's excellent oauth2lib
 ```python
 	# use with to perform batch updates in block
 	with presentation as pres:
-		table = pres.get_element_by_id('TABLE_ID')
-		for cell in table:
-			print cell.location # tuple containing cell location
-			for segment in cell.text:
-				# update cell
-				segment.text = 'UPDATED_VALUE'
+			table = pres.get_element_by_id('TABLE_ID')
+			for cell in table:
+					print cell.location # tuple containing cell location
+					for segment in cell.text:
+							# update cell
+							segment.text = 'UPDATED_VALUE'
 
 ```
 
@@ -116,13 +116,13 @@ Requires a valid Google API Credentials object from Google's excellent oauth2lib
 	spreadsheet = gsheets.get_spreadsheet('SPREADSHEET_ID')
 
 	for sheet in spreadsheet:
-		print sheet.id, sheet.title
+			print sheet.id, sheet.title
 ```
 
-- [x] Get sheet by ID and return its full block of values:
+- [x] Get sheet by name and return its full block of values:
 
 ```python
-	sheet = spreadsheet['SHEET_ID']
+	sheet = spreadsheet['Sheet 1']
 	values = sheet.values()	
 ```
 
@@ -131,14 +131,27 @@ Requires a valid Google API Credentials object from Google's excellent oauth2lib
 ```python
 	named_ranges = spreadsheet.named_ranges('SHEET_NAME!A:C')
 	for rng in named_range:
-		values = named_range.get_block()
+			values = named_range.get_block()
 ```
 
-- [x] Loop through values block:
+- [x] Update values block:
 
 ```python
 	values = spreadsheet.get_range('SHEET_NAME!A:C')
-	for row in values:
-		for cell in row:
-			print cell.value
+	# loop through rows
+	for i, row in enumerate(values):
+			values[i] = [1, 2, 3]
+			print row
+	values.update()
+	
+	# you can also use the slice syntax for updating..
+	values[2:5] = [[1,2,4], [4, 5, 6], [6, 7, 8]]
+	values.update()
+```
+
+- [x] Append to values block:
+
+```python
+	to_append = [[1, 2, 3], [4, 5, 6]]
+	values.append(to_append)	
 ```
