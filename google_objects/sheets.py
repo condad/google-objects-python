@@ -23,6 +23,34 @@ log = logging.getLogger(__name__)
     # iii/ change .from_existing to .from_raw
 
 
+def _value_to_cell(val):
+    if str(val).isdigit():
+        try:
+            return {'userEnteredValue': {'numberValue': float(val)}}
+        except:
+            return {'userEnteredValue': {'numberValue': int(val)}}
+    return {'userEnteredValue': {'stringValue': str(val)}}
+
+
+def _cells_to_row(cells):
+    return [_value_to_cell(cell) for cell in cells]
+
+
+def _format_sheet(sheet):
+    title = sheet.get('title', 'NEW SHEET')
+    values = sheet.get('values', [])
+    return {
+        'properties': {
+            'title': title
+        },
+        'data': {
+            'rowData': [
+                {'values': _cells_to_row(val)} for val in values
+            ]
+        }
+    }
+
+
 def _grid_to_a1(sheet_name, start, end):
     start_row, start_col = start
     end_row, end_col = end
@@ -58,6 +86,16 @@ class SheetsAPI(GoogleAPI):
         """
         data = self._resource.spreadsheets().get(
             spreadsheetId=id
+        ).execute()
+
+        return Spreadsheet.from_existing(data, self)
+
+    def create_spreadsheet(self, sheets=[], **kwargs):
+        data = self._resource.spreadsheets().create(
+            body={
+                'properties': kwargs,
+                'sheets': [_format_sheet(s) for s in sheets]
+            }
         ).execute()
 
         return Spreadsheet.from_existing(data, self)
@@ -122,25 +160,30 @@ class Spreadsheet(GoogleObject):
         # initalize the other properties
         super(self.__class__, self).__init__(**kwargs)
 
+    def __iter__(self):
+        return self.yield_sheets()
+
+    def __getitem__(self, key):
+        try:
+            if key.isdigit():
+                return self.get_sheet_by_id(key)
+            else:
+                return self.get_sheet_by_name(key)
+        except ValueError:
+            raise TypeError('Sheet not found')
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exception_type, exception_value, traceback):
+        self.update()
+
     @classmethod
     def from_existing(cls, data, client=None):
         """initiates using existing Spreadsheet resource"""
 
         new_data = keys_to_snake(data)
         return cls(client, **new_data)
-
-    def __iter__(self):
-        return self.yield_sheets()
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exception_type, exception_value, traceback):
-        # if self.__updates:
-            # self.client.push_updates(self._id, self._updates)
-            # # TODO: add success handlers
-            # del self._updates[:]
-        self.update()
 
     @property
     def id(self):
@@ -215,15 +258,6 @@ class Spreadsheet(GoogleObject):
             self.client.push_updates(self._id, self._updates)
             # TODO: add success handlers
             del self._updates[:]
-
-    def __getitem__(self, key):
-        try:
-            if key.isdigit():
-                return self.get_sheet_by_id(key)
-            else:
-                return self.get_sheet_by_name(key)
-        except ValueError:
-            raise TypeError('Sheet not found')
 
     class NamedRange(object):
         """represents a NamedRange resource, can
