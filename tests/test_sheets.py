@@ -5,15 +5,15 @@ import pytest
 import os
 import logging
 
-from google_objects import SheetsAPI
-from google_objects.sheets import Spreadsheet, Sheet, Block
+from google_objects import SheetsClient
+from google_objects.sheets.core import Spreadsheet, Sheet, Block
 
 log = logging.getLogger(__name__)
 
 
 @pytest.fixture
 def client(credentials):
-    return SheetsAPI.from_service_account(*credentials)
+    return SheetsClient.from_service_account(*credentials)
 
 
 @pytest.fixture

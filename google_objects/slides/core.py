@@ -12,8 +12,9 @@ import logging
 
 from apiclient.errors import HttpError
 
-from . import GoogleAPI, GoogleObject
-from .utils import keys_to_snake, set_private_attrs
+import updates
+from .. import GoogleClient, GoogleObject
+from ..utils import keys_to_snake, set_private_attrs
 
 log = logging.getLogger(__name__)
 
@@ -30,7 +31,7 @@ REMOVE GET_MATCHES() on Presentation
     # v/ generate elements from PageElement constructor using __subclasses__
 
 
-class SlidesAPI(GoogleAPI):
+class SlidesClient(GoogleClient):
 
     """Google Slides Wrapper Object
 
@@ -43,7 +44,7 @@ class SlidesAPI(GoogleAPI):
     """
 
     def __init__(self, credentials=None, api_key=None):
-        super(SlidesAPI, self).__init__(credentials, api_key)
+        super(SlidesClient, self).__init__(credentials, api_key)
         self._resource = self.build('slides', 'v1')
 
     def get_presentation(self, presentation_id):
@@ -67,8 +68,8 @@ class SlidesAPI(GoogleAPI):
 
         """
         data = self._resource.presentations().pages().get(
-            presentationId = presentation_id,
-            pageObjectId = page_id
+            presentationId=presentation_id,
+            pageObjectId=page_id
         ).execute()
 
         return Page.from_existing(data)
@@ -174,7 +175,7 @@ class Presentation(GoogleObject):
         replacement with arg:find to arg:replace
         """
         self.add_update(
-            SlidesUpdate.replace_all_text(str(find), str(replace), case_sensitive)
+            updates.REPLACE_ALL_TEXT(str(find), str(replace), case_sensitive)
         )
 
     def get_element_by_id(self, element_id):
@@ -343,7 +344,7 @@ class PageElement(GoogleObject):
         presentation updates list.
         """
         self.presentation.add_update(
-            SlidesUpdate.delete_object(self._id)
+            updates.DELETE_OBJECT(self._id)
         )
 
 
@@ -484,7 +485,7 @@ class TextContent(GoogleObject):
         def text(self, value):
             if not self._text:
                 self.page_element.update(
-                    SlidesUpdate.delete_text(
+                    updates.DELETE_TEXT(
                         self.page_element.id,
                         row=getattr(self.page_element, 'start_index', None),
                         col=getattr(self.page_element, 'end_index', None),
@@ -493,7 +494,7 @@ class TextContent(GoogleObject):
                     )
                 )
 
-            update_request = SlidesUpdate.insert_text(
+            update_request = updates.INSERT_TEXT(
                 self.id, value, start=self.start_index
             )
             self.page_element.update(update_request)
@@ -503,7 +504,7 @@ class TextContent(GoogleObject):
         @text.deleter
         def text(self):
             obj_id = self.page_element.id
-            update_request = SlidesUpdate.delete_text(
+            update_request = updates.DELETE_TEXT(
                 obj_id, start=self.start_index, end=self.end_index
             )
             self.page_element.update(update_request)
@@ -519,62 +520,3 @@ class TextContent(GoogleObject):
 
         def __str__(self):
             return self.text
-
-
-class SlidesUpdate(object):
-
-    """creates google-api-wrapper ready batchUpdate
-    request dictionaries
-    """
-
-    @staticmethod
-    def delete_object(obj_id):
-        return {
-            'deleteObject': {
-                'objectId': obj_id
-            }
-        }
-
-    @staticmethod
-    def replace_all_text(find, replace, case_sensitive=False):
-        return {
-            'replaceAllText': {
-                'replaceText': replace,
-                'containsText': {
-                    'text': find,
-                    'matchCase': case_sensitive
-                }
-            }
-        }
-
-    @staticmethod
-    def insert_text(obj_id, text, row=None, column=None, start=0):
-        return {
-            'insertText': {
-                'objectId': obj_id,
-                'text': text,
-                'cellLocation': {
-                    'rowIndex': row,
-                    'columnIndex': column
-                },
-                'insertionIndex': start
-
-            }
-        }
-
-    @staticmethod
-    def delete_text(obj_id, row=None, col=None, start=None, end=None,  kind='FIXED_RANGE'):
-        return {
-            'deleteText': {
-                'objectId': obj_id,
-                'cellLocation': {
-                    'rowIndex': row,
-                    'columnIndex': col
-                },
-                'text_range': {
-                    'startIndex': start,
-                    'endIndex': end
-
-                },
-            }
-        }

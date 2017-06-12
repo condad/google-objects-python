@@ -7,12 +7,10 @@ Google Sheets API
 
 """
 
-import re
 import logging
-from decimal import Decimal, InvalidOperation
 
-from . import GoogleAPI, GoogleObject
-from .utils import keys_to_snake
+from .. import GoogleClient, GoogleObject
+from ..utils import keys_to_snake
 
 log = logging.getLogger(__name__)
 
@@ -24,12 +22,13 @@ log = logging.getLogger(__name__)
 
 
 def _value_to_cell(val):
-    if str(val).isdigit():
+    val = val.encode('utf-8').strip()
+    if val.isdigit():
         try:
             return {'userEnteredValue': {'numberValue': float(val)}}
         except:
             return {'userEnteredValue': {'numberValue': int(val)}}
-    return {'userEnteredValue': {'stringValue': str(val)}}
+    return {'userEnteredValue': {'stringValue': val}}
 
 
 def _cells_to_row(cells):
@@ -66,7 +65,7 @@ def _grid_to_a1(sheet_name, start, end):
     )
 
 
-class SheetsAPI(GoogleAPI):
+class SheetsClient(GoogleClient):
 
     """Creates a Google Sheets Resource"""
 
@@ -245,13 +244,15 @@ class Spreadsheet(GoogleObject):
 
     def named_ranges(self):
         def set_sheet_id(rng):
-            """if sheet_id isn't present, set it to the ID of the first sheet"""
-            if not 'sheet_id' in rng['range']:
+            """If sheet_id isn't present, set it to the ID of the first sheet.
+            """
+            if 'sheet_id' not in rng['range']:
                 rng['range']['sheet_id'] = 0
 
             return rng
 
-        return [self.NamedRange(self, each) for each in map(set_sheet_id, self._named_ranges)]
+        _named_ranges = map(set_sheet_id, self._named_ranges)
+        return [NamedRange(self, each) for each in _named_ranges]
 
     def update(self):
         if self.__updates:
@@ -259,60 +260,62 @@ class Spreadsheet(GoogleObject):
             # TODO: add success handlers
             del self._updates[:]
 
-    class NamedRange(object):
-        """represents a NamedRange resource, can
-        return it's range in A1 notation
-        """
 
-        def __init__(self, spreadsheet, named_range):
-            self.spreadsheet = spreadsheet
-            self.id = named_range.get('named_range_id')
-            self.name = named_range.get('name')
-            self.range = named_range.get('range')
+class NamedRange(object):
 
-        @property
-        def sheet_id(self):
-            if 'sheet_id' in self.range:
-                return self.range['sheet_id']
+    """represents a NamedRange resource, can
+    return it's range in A1 notation
+    """
 
-        @property
-        def sheet_name(self):
-            sheet = self.spreadsheet[self.sheet_id]
-            return sheet.title
+    def __init__(self, spreadsheet, named_range):
+        self.spreadsheet = spreadsheet
+        self.id = named_range.get('named_range_id')
+        self.name = named_range.get('name')
+        self.range = named_range.get('range')
 
-        @property
-        def start_row(self):
-            if 'start_row_index' in self.range:
-                return self.range['start_row_index']
+    @property
+    def sheet_id(self):
+        if 'sheet_id' in self.range:
+            return self.range['sheet_id']
 
-        @property
-        def end_row(self):
-            if 'end_row_index' in self.range:
-                return self.range['end_row_index']
+    @property
+    def sheet_name(self):
+        sheet = self.spreadsheet[self.sheet_id]
+        return sheet.title
 
-        @property
-        def start_column(self):
-            if 'start_column_index' in self.range:
-                return self.range['start_column_index']
+    @property
+    def start_row(self):
+        if 'start_row_index' in self.range:
+            return self.range['start_row_index']
 
-        @property
-        def end_column(self):
-            if 'end_column_index' in self.range:
-                return self.range['end_column_index']
+    @property
+    def end_row(self):
+        if 'end_row_index' in self.range:
+            return self.range['end_row_index']
 
-        def as_a1(self):
-            sheet_name = None
-            for sheet in self.spreadsheet.sheets():
-                if self.sheet_id == sheet.id:
-                    sheet_name = sheet.title
-                    break
+    @property
+    def start_column(self):
+        if 'start_column_index' in self.range:
+            return self.range['start_column_index']
 
-            start = (self.start_row, self.start_column)
-            end = (self.end_row, self.end_column)
-            return _grid_to_a1(sheet_name, start, end)
+    @property
+    def end_column(self):
+        if 'end_column_index' in self.range:
+            return self.range['end_column_index']
 
-        def get_block(self):
-            return self.spreadsheet.get_range(self.as_a1())
+    def as_a1(self):
+        sheet_name = None
+        for sheet in self.spreadsheet.sheets():
+            if self.sheet_id == sheet.id:
+                sheet_name = sheet.title
+                break
+
+        start = (self.start_row, self.start_column)
+        end = (self.end_row, self.end_column)
+        return _grid_to_a1(sheet_name, start, end)
+
+    def get_block(self):
+        return self.spreadsheet.get_range(self.as_a1())
 
 
 class Sheet(GoogleObject):
@@ -447,32 +450,3 @@ class Block(GoogleObject):
 
     def __setitem__(self, key, item):
         self._values[key] = item
-
-
-class SheetsUpdate(object):
-
-    """creates google-api-wrapper ready batchUpdate
-    request dictionaries
-    """
-
-    @staticmethod
-    def format_row(sheet_id, start, end, red=0, green=0, blue=0):
-        return {
-            "repeatCell": {
-                "range": {
-                    "sheetId": sheet_id,
-                    "startRowIndex": start,
-                    "endRowIndex": end
-                },
-                "cell": {
-                    "userEnteredFormat": {
-                        "backgroundColor": {
-                            "red": red,
-                            "green": green,
-                            "blue": blue
-                        }
-                    }
-                },
-                "fields": "userEnteredFormat(backgroundColor)"
-            }
-        }

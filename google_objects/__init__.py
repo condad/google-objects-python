@@ -31,7 +31,7 @@ def _gen_scopes(scopes):
     return ['https://www.googleapis.com/auth/' + each for each in scopes]
 
 
-class GoogleAPI(object):
+class GoogleClient(object):
 
     """Google API Base object that saves credentials
     and build Resource objects. Responsible for permissions
@@ -59,6 +59,8 @@ class GoogleAPI(object):
 
         creds_path = os.path.expanduser(creds_path)
         creds = S.from_json_keyfile_name(creds_path, _gen_scopes(scope))
+
+        # create delegated if user exists
         if user:
             creds = creds.create_delegated(user)
 
@@ -101,6 +103,6 @@ class GoogleObject(object):
         return return_dict
 
 
-from .drive import DriveAPI
-from .sheets import SheetsAPI
-from .slides import SlidesAPI
+from .drive.core import DriveClient
+from .sheets.core import SheetsClient
+from .slides.core import SlidesClient

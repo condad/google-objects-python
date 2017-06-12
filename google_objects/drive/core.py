@@ -10,8 +10,8 @@ Google Drive API
 import uuid
 import logging
 
-from . import GoogleAPI, GoogleObject
-from .utils import keys_to_snake, keys_to_camel
+from .. import GoogleClient, GoogleObject
+from ..utils import keys_to_snake, keys_to_camel
 
 log = logging.getLogger(__name__)
 
@@ -22,7 +22,7 @@ log = logging.getLogger(__name__)
     # add SKELETON to set attributes to null when not set
 
 
-class DriveAPI(GoogleAPI):
+class DriveClient(GoogleClient):
 
     """Google Drive Wrapper Object,
     exposes all Drive API operations.
@@ -200,7 +200,7 @@ class File(GoogleObject):
         """Initialize File Object
 
         :data: <Dict> of file data
-        :client: <DriveAPI>
+        :client: <DriveClient>
 
         """
         self.client = client

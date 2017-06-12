@@ -15,9 +15,9 @@ Requires a valid Google API Credentials object from Google's excellent oauth2lib
 - [x] Retrieve drive 'About' information:
 
 ```python
-from google_objects import DriveAPI
+from google_objects import DriveClient
 
-gdrive = DriveAPI(OAUTH2LIB_CREDS)
+gdrive = DriveClient(OAUTH2LIB_CREDS)
 about = gdrive.get_about()
 
 print about.email
@@ -67,9 +67,9 @@ print permission.role, permission.type, permission.email
 - [x] Retrieve presentation and loop through elements:
 
 ```python
-from google_objects import SlidesAPI
+from google_objects import SlidesClient
 
-gslides = SlidesAPI(OAUTHLIB_CREDS)
+gslides = SlidesClient(OAUTHLIB_CREDS)
 presentation = gslides.get_presentation('PRESENTATION_ID')
 
 # print slides attributes
@@ -107,9 +107,9 @@ with presentation as pres:
 - [x] Retrieve spreadsheet and loop through sheets:
 
 ```python
-from google_objects import SheetsAPI
+from google_objects import SheetsClient
 
-gsheets = SheetsAPI(OAUTHLIB_CREDS)
+gsheets = SheetsClient(OAUTHLIB_CREDS)
 spreadsheet = gsheets.get_spreadsheet('SPREADSHEET_ID')
 
 for sheet in spreadsheet:

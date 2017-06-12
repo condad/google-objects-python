@@ -1,15 +1,15 @@
 import os
 import pytest
 
-from google_objects import SlidesAPI
-from google_objects.slides import Presentation, Page
-from google_objects.slides import PageElement, Shape, Table
-from google_objects.slides import TextContent
+from google_objects import SlidesClient
+from google_objects.slides.core import Presentation, Page
+from google_objects.slides.core import PageElement, Shape, Table
+from google_objects.slides.core import TextContent
 
 
 @pytest.fixture
 def client(credentials):
-    return SlidesAPI.from_service_account(*credentials)
+    return SlidesClient.from_service_account(*credentials)
 
 
 def test_get_presentation(client):

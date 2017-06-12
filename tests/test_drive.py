@@ -6,13 +6,13 @@ import os
 from oauth2client.service_account import ServiceAccountCredentials
 from oauth2client.client import OAuth2Credentials
 
-from google_objects import DriveAPI
-from google_objects.drive import File, Permission
+from google_objects import DriveClient
+from google_objects.drive.core import File, Permission
 
 
 @pytest.fixture
 def client(credentials):
-    return DriveAPI.from_service_account(*credentials)
+    return DriveClient.from_service_account(*credentials)
 
 
 def test_file_list(client):
