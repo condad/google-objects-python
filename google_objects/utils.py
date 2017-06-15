@@ -28,7 +28,7 @@ def set_private_attrs(instance, dt):
 
     """
 
-    for key, val in dt.iteritems():
+    for key, val in dt.items():
         setattr(instance, '_{}'.format(key), val)
         # self.__dict__['_{}'.format(key)] = val
 
@@ -67,7 +67,7 @@ def keys_to_snake(dt):
     """recursively changes camel_cased keys on argument to
     snake case"""
 
-    for key, val in dt.iteritems():
+    for key, val in dt.items():
         if isinstance(val, list):
             val = list_to_snake(val)
 
@@ -84,7 +84,7 @@ def keys_to_camel(dt):
     """recursively changes snake_cased keys on argument to
     camel_case, strips leading underscores"""
 
-    for key, val in dt.iteritems():
+    for key, val in dt.items():
         if isinstance(val, dict):
             val = keys_to_camel(val)
 

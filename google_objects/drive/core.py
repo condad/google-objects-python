@@ -283,7 +283,7 @@ class File(GoogleObject):
         to queue
         """
 
-        kwargs.update({'email': email})
+        kwargs.update({'email': email, 'emailAddress': email})
         permission = Permission.from_existing(kwargs, self)
         message = kwargs.get('message')
         notification = kwargs.get('notification')

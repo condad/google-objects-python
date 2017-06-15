@@ -12,9 +12,9 @@ import logging
 
 from apiclient.errors import HttpError
 
-import updates
-from .. import GoogleClient, GoogleObject
-from ..utils import keys_to_snake, set_private_attrs
+import google_objects.slides.updates
+from google_objects import GoogleClient, GoogleObject
+from google_objects.utils import keys_to_snake, set_private_attrs
 
 log = logging.getLogger(__name__)
 
