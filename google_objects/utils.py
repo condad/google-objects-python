@@ -92,3 +92,11 @@ def keys_to_camel(dt):
         dt[new_key] = dt.pop(key)
 
     return dt
+
+if __name__ == '__main__':
+    dt = {
+        'pageElements': 'test',
+        'otherPresentation': 3
+    }
+
+    print(keys_to_snake(dt))

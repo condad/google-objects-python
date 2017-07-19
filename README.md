@@ -33,18 +33,18 @@ print about.photo
 
 ```python
 files_by_type = {
-	'slides': gdrive.list_files('presentation'),
-	'folders': gdrive.list_files('folder'),
-	'spreadsheets': gdrive.list_files('spreadsheets'),
+    'slides': gdrive.list_files('presentation'),
+    'folders': gdrive.list_files('folder'),
+    'spreadsheets': gdrive.list_files('spreadsheets'),
 }
 
 for file in files_by_type['folders']:
-	print file.id
-	print file.name
+    print file.id
+    print file.name
 
 for file in files_by_type['spreadsheets']:
-	# prints list of parent folder IDs
-	print file.parents
+    # prints list of parent folder IDs
+    print file.parents
 
 # ...
 ```
@@ -74,11 +74,11 @@ presentation = gslides.get_presentation('PRESENTATION_ID')
 
 # print slides attributes
 for slide in presentation:
-	print slide.id
+    print slide.id
 
-	for element in slide: # equivalent to 'for element in presentation.elements()' 	
-		print element.type 
-		# Shape, Table, etc
+    for element in slide: # equivalent to 'for element in presentation.elements()'  
+      print element.type 
+      # Shape, Table, etc
 ```
 
 - [x] Check text in shape:
@@ -86,7 +86,7 @@ for slide in presentation:
 ```python
 shape = presentation.get_element_by_id('SHAPE_ID')
 for segment in shape.text:
-	print segment.text
+    print segment.text
 ```
 
 - [x] Batch update every cell in table:
@@ -94,12 +94,12 @@ for segment in shape.text:
 ```python
 # use with to perform batch updates in block
 with presentation as pres:
-	table = pres.get_element_by_id('TABLE_ID')
-	for cell in table:
-		print cell.location # tuple containing cell location
-		for segment in cell.text:
-			# update cell
-			segment.text = 'UPDATED_VALUE'
+    table = pres.get_element_by_id('TABLE_ID')
+    for cell in table:
+        print cell.location # tuple containing cell location
+        for segment in cell.text:
+            # update cell
+            segment.text = 'UPDATED_VALUE'
 ```
 
 ### Google Sheets v4
@@ -113,14 +113,14 @@ gsheets = SheetsClient(OAUTHLIB_CREDS)
 spreadsheet = gsheets.get_spreadsheet('SPREADSHEET_ID')
 
 for sheet in spreadsheet:
-	print sheet.id, sheet.title
+    print sheet.id, sheet.title
 ```
 
 - [x] Get sheet by name and return its full block of values:
 
 ```python
 sheet = spreadsheet['Sheet 1']
-values = sheet.values()	
+values = sheet.values() 
 ```
 
 - [x] Get named range value block:
@@ -128,7 +128,7 @@ values = sheet.values()
 ```python
 named_ranges = spreadsheet.named_ranges('SHEET_NAME!A:C')
 for rng in named_range:
-	values = named_range.get_block()
+    values = named_range.get_block()
 ```
 
 - [x] Update values block:
@@ -137,8 +137,8 @@ for rng in named_range:
 values = spreadsheet.get_range('SHEET_NAME!A:C')
 # loop through rows
 for i, row in enumerate(values):
-	values[i] = [1, 2, 3]
-	print row
+    values[i] = [1, 2, 3]
+    print row
 values.update()
 
 # you can also use the slice syntax for updating..
@@ -150,5 +150,5 @@ values.update()
 
 ```python
 to_append = [[1, 2, 3], [4, 5, 6]]
-values.append(to_append)	
+values.append(to_append)  
 ```

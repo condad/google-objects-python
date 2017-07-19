@@ -1,4 +1,4 @@
-def FORMAT_ROW(sheet_id, start, end, red=0, green=0, blue=0):
+def FORMAT_ROW(sheet_id, start, end, rgba):
     return {
         "repeatCell": {
             "range": {
@@ -9,9 +9,10 @@ def FORMAT_ROW(sheet_id, start, end, red=0, green=0, blue=0):
             "cell": {
                 "userEnteredFormat": {
                     "backgroundColor": {
-                        "red": red,
-                        "green": green,
-                        "blue": blue
+                        "red": rgba[0],
+                        "green": rgba[1],
+                        "blue": rgba[2],
+                        'alpha': rgba[3]
                     }
                 }
             },

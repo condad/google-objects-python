@@ -22,7 +22,6 @@ log = logging.getLogger(__name__)
 
 
 def _value_to_cell(val):
-    val = val.encode('utf-8').strip()
     if val.isdigit():
         try:
             return {'userEnteredValue': {'numberValue': float(val)}}
@@ -88,6 +87,13 @@ class SheetsClient(GoogleClient):
         ).execute()
 
         return Spreadsheet.from_existing(data, self)
+
+    def create_spreadsheet_from_dataframes(self, *frames, **options):
+        if not frames:
+            raise ValueError
+
+        formatted_frames = [frm.values.tolist() for frm in frames]
+        return self.create_spreadsheet(self, formatted_frames, **options)
 
     def create_spreadsheet(self, sheets=[], **kwargs):
         data = self._resource.spreadsheets().create(

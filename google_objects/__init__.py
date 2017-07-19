@@ -6,8 +6,8 @@ import httplib2
 
 from apiclient import discovery
 
-from .utils import set_private_attrs
-from .utils import keys_to_snake, keys_to_camel
+from google_objects.utils import set_private_attrs
+from google_objects.utils import keys_to_snake, keys_to_camel
 
 
 # sets default logging handler to avoid "No handler found" warnings.
