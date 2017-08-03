@@ -75,6 +75,11 @@ class SheetsClient(GoogleClient):
         super(self.__class__, self).__init__(credentials, api_key)
         self._resource = self.build('sheets', 'v4')
 
+    @classmethod
+    def from_service_account(cls, **kwargs):
+        kwargs['scope'] = ['spreadsheets']
+        return super().from_service_account(**kwargs)
+
     def get_spreadsheet(self, id):
         """Returns a Spreadsheet Object
 

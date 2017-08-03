@@ -54,8 +54,14 @@ class GoogleClient(object):
         return discovery.build(service, version, http=http, **kwargs)
 
     @classmethod
-    def from_service_account(cls, creds_path, scope=SCOPES, user=None):
+    def from_service_account(cls, creds_path=None, user=None, scope=SCOPES):
         from oauth2client.service_account import ServiceAccountCredentials as S
+
+        if not creds_path:
+            creds_path = os.getenv('GOOGLE_SERVICE_ACCOUNT_CREDENTIALS')
+
+        if not user:
+            user = os.getenv('GOOGLE_DELEGATED_USER')
 
         creds_path = os.path.expanduser(creds_path)
         creds = S.from_json_keyfile_name(creds_path, _gen_scopes(scope))

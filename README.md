@@ -1,6 +1,6 @@
 # Google Objects
 Thin, pythonic OO wrapper around Google's "google-api-python-client" library.
-Currently supports Python 2.7 :snake::snake::snake:
+Currently supports Python 3+ :snake::snake::snake:
 
 ## Installation
 ```bash
@@ -20,11 +20,11 @@ from google_objects import DriveClient
 gdrive = DriveClient(OAUTH2LIB_CREDS)
 about = gdrive.get_about()
 
-print about.email
-print about.name
+print(about.email)
+print(about.name)
 
 # prints link to profile photo
-print about.photo
+print(about.photo)
 
 # ...
 ```
@@ -39,12 +39,12 @@ files_by_type = {
 }
 
 for file in files_by_type['folders']:
-    print file.id
-    print file.name
+    print(file.id)
+    print(file.name)
 
 for file in files_by_type['spreadsheets']:
     # prints list of parent folder IDs
-    print file.parents
+    print(file.parents)
 
 # ...
 ```
@@ -59,7 +59,7 @@ new_file = file.copy('NEW_FILE_NAME', ['PARENT_FOLDER_1', 'PARENT_FOLDER_2'])
 permission = new_file.add_permission('myfriend@hotmail.com')
 
 # print newly created permission information
-print permission.role, permission.type, permission.email
+print(permission.role, permission.type, permission.email)
 ```
 
 ### Google Slides v1
@@ -74,11 +74,11 @@ presentation = gslides.get_presentation('PRESENTATION_ID')
 
 # print slides attributes
 for slide in presentation:
-    print slide.id
+    print(slide.id)
 
     for element in slide: # equivalent to 'for element in presentation.elements()'  
-      print element.type 
-      # Shape, Table, etc
+        print(element.type) 
+        # Shape, Table, etc
 ```
 
 - [x] Check text in shape:
@@ -86,7 +86,7 @@ for slide in presentation:
 ```python
 shape = presentation.get_element_by_id('SHAPE_ID')
 for segment in shape.text:
-    print segment.text
+    print(segment.text)
 ```
 
 - [x] Batch update every cell in table:
@@ -96,7 +96,7 @@ for segment in shape.text:
 with presentation as pres:
     table = pres.get_element_by_id('TABLE_ID')
     for cell in table:
-        print cell.location # tuple containing cell location
+        print(cell.location) # tuple containing cell location
         for segment in cell.text:
             # update cell
             segment.text = 'UPDATED_VALUE'
@@ -113,7 +113,7 @@ gsheets = SheetsClient(OAUTHLIB_CREDS)
 spreadsheet = gsheets.get_spreadsheet('SPREADSHEET_ID')
 
 for sheet in spreadsheet:
-    print sheet.id, sheet.title
+    print(sheet.id, sheet.title)
 ```
 
 - [x] Get sheet by name and return its full block of values:
@@ -138,7 +138,7 @@ values = spreadsheet.get_range('SHEET_NAME!A:C')
 # loop through rows
 for i, row in enumerate(values):
     values[i] = [1, 2, 3]
-    print row
+    print(row)
 values.update()
 
 # you can also use the slice syntax for updating..

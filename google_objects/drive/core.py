@@ -144,8 +144,6 @@ class DriveClient(GoogleClient):
         return Permission(**data)
 
 
-# objects
-
 class About(GoogleObject):
 
     """Docstring for User Resource, this is READ ONLY"""
