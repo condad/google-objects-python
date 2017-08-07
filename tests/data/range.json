@@ -1,0 +1,86 @@
+{
+ "range": "'CLSFF Fluxx'!A1:N101",
+ "majorDimension": "ROWS",
+ "values": [
+  [
+   "Index",
+   "Tax ID",
+   "Org",
+   "street",
+   "city",
+   "state"
+  ],
+  [
+   "1",
+   "826369267",
+   "TEST Tanoodle Inc",
+   "2 Morrow Parkway",
+   "Fort Myers",
+   "FL"
+  ],
+  [
+   "2",
+   "530875595",
+   "TEST Gabtype Inc",
+   "1 Westend Plaza",
+   "Cedar Rapids",
+   "IA"
+  ],
+  [
+   "3",
+   "980915293",
+   "TEST Bluejam Co-op",
+   "9463 Loeprich Way",
+   "Appleton",
+   "WI"
+  ],
+  [
+   "4",
+   "301006867",
+   "TEST Vipe Inc",
+   "552 Russell Terrace",
+   "El Paso",
+   "TX"
+  ],
+  [
+   "5",
+   "344273582",
+   "TEST Trunyx Works",
+   "31595 Loomis Circle",
+   "Spokane",
+   "WA"
+  ],
+  [
+   "6",
+   "857753185",
+   "TEST Quimba United",
+   "1 Ridgeway Center",
+   "Portland",
+   "OR"
+  ],
+  [
+   "7",
+   "674638959",
+   "TEST Zoonder Foundation",
+   "24 Hoepker Point",
+   "Jamaica",
+   "NY"
+  ],
+  [
+   "8",
+   "382646422",
+   "TEST Devpoint Associates",
+   "93796 Declaration Alley",
+   "Oakland",
+   "CA"
+  ],
+  [
+   "9",
+   "387889089",
+   "TEST Yoveo Co",
+   "72284 Upham Junction",
+   "Kansas City",
+   "MO"
+  ]
+ ]
+}

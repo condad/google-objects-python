@@ -1,0 +1,184 @@
+{
+ "spreadsheetId": "abc123",
+ "properties": {
+  "title": "Test Google Spreadsheet",
+  "locale": "en_US",
+  "autoRecalc": "ON_CHANGE",
+  "timeZone": "America/Toronto",
+  "defaultFormat": {
+   "backgroundColor": {
+    "red": 1,
+    "green": 1,
+    "blue": 1
+   },
+   "padding": {
+    "top": 2,
+    "right": 3,
+    "bottom": 2,
+    "left": 3
+   },
+   "verticalAlignment": "BOTTOM",
+   "wrapStrategy": "OVERFLOW_CELL",
+   "textFormat": {
+    "foregroundColor": {
+    },
+    "fontFamily": "arial,sans,sans-serif",
+    "fontSize": 10,
+    "bold": false,
+    "italic": false,
+    "strikethrough": false,
+    "underline": false
+   }
+  }
+ },
+ "sheets": [
+  {
+   "properties": {
+    "sheetId": 258127222,
+    "title": "CLSFF Fluxx",
+    "index": 0,
+    "sheetType": "GRID",
+    "gridProperties": {
+     "rowCount": 102,
+     "columnCount": 13
+    }
+   }
+  },
+  {
+   "properties": {
+    "sheetId": 574349425,
+    "title": "CFCC ACH",
+    "index": 1,
+    "sheetType": "GRID",
+    "gridProperties": {
+     "rowCount": 101,
+     "columnCount": 12,
+     "frozenRowCount": 1
+    }
+   },
+   "basicFilter": {
+    "range": {
+     "sheetId": 574349425,
+     "startRowIndex": 0,
+     "endRowIndex": 100,
+     "startColumnIndex": 0,
+     "endColumnIndex": 11
+    },
+    "sortSpecs": [
+     {
+      "sortOrder": "DESCENDING"
+     }
+    ],
+    "criteria": {
+     "4": {
+     }
+    }
+   }
+  },
+  {
+   "properties": {
+    "sheetId": 947309066,
+    "title": "DRI Fluxx",
+    "index": 2,
+    "sheetType": "GRID",
+    "gridProperties": {
+     "rowCount": 102,
+     "columnCount": 13,
+     "frozenRowCount": 1
+    }
+   },
+   "basicFilter": {
+    "range": {
+     "sheetId": 947309066,
+     "startRowIndex": 0,
+     "endRowIndex": 101,
+     "startColumnIndex": 0,
+     "endColumnIndex": 12
+    },
+    "sortSpecs": [
+     {
+      "dimensionIndex": 1,
+      "sortOrder": "ASCENDING"
+     }
+    ]
+   }
+  },
+  {
+   "properties": {
+    "sheetId": 1924375635,
+    "title": "CFC 150",
+    "index": 3,
+    "sheetType": "GRID",
+    "gridProperties": {
+     "rowCount": 100,
+     "columnCount": 13
+    }
+   }
+  },
+  {
+   "properties": {
+    "sheetId": 484180191,
+    "title": "CAN Users w/ Address and Project",
+    "index": 4,
+    "sheetType": "GRID",
+    "gridProperties": {
+     "rowCount": 102,
+     "columnCount": 12
+    }
+   }
+  },
+  {
+   "properties": {
+    "sheetId": 0,
+    "title": "US Users w/ Address and IBAN",
+    "index": 5,
+    "sheetType": "GRID",
+    "gridProperties": {
+     "rowCount": 102,
+     "columnCount": 12
+    }
+   }
+  },
+  {
+   "properties": {
+    "sheetId": 2006865618,
+    "title": "CRA Numbers",
+    "index": 6,
+    "sheetType": "GRID",
+    "gridProperties": {
+     "rowCount": 100,
+     "columnCount": 20
+    }
+   }
+  },
+  {
+   "properties": {
+    "sheetId": 639763700,
+    "title": "Project Titles",
+    "index": 7,
+    "sheetType": "GRID",
+    "gridProperties": {
+     "rowCount": 150,
+     "columnCount": 3,
+     "frozenRowCount": 1
+    }
+   },
+   "basicFilter": {
+    "range": {
+     "sheetId": 639763700,
+     "startRowIndex": 0,
+     "endRowIndex": 144,
+     "startColumnIndex": 0,
+     "endColumnIndex": 3
+    },
+    "sortSpecs": [
+     {
+      "dimensionIndex": 1,
+      "sortOrder": "ASCENDING"
+     }
+    ]
+   }
+  }
+ ],
+ "spreadsheetUrl": "https://docs.google.com/a/grantbook.org/spreadsheets/d/1R-edV8LDgRaaPHSSsNSyR5vG9ypuDjovn7jGcK1k-RY/edit"
+}

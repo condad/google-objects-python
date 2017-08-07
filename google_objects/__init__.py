@@ -2,12 +2,21 @@
 
 import os
 import logging
-import httplib2
 
 from apiclient import discovery
 
+from google_objects.auth import service_account_creds
 from google_objects.utils import set_private_attrs
 from google_objects.utils import keys_to_snake, keys_to_camel
+
+SCOPES = {
+    'drive',
+    'spreadsheets'
+}
+
+
+def _gen_scopes(scopes):
+    return ['https://www.googleapis.com/auth/' + each for each in scopes]
 
 
 # sets default logging handler to avoid "No handler found" warnings.
@@ -21,15 +30,6 @@ except ImportError:
 
 logging.getLogger(__name__).addHandler(NullHandler())
 
-SCOPES = {
-    'drive',
-    'spreadsheets'
-}
-
-
-def _gen_scopes(scopes):
-    return ['https://www.googleapis.com/auth/' + each for each in scopes]
-
 
 class GoogleClient(object):
 
@@ -39,38 +39,31 @@ class GoogleClient(object):
 
     """
 
-    def __init__(self, credentials=None, api_key=None):
-        self.credentials = credentials
-        self.api_key = api_key
-
-    def build(self, service, version, **kwargs):
-        """Create an API specific HTTP resource."""
-
-        if self.api_key:
-            return discovery.build(service, version,
-                                   developerKey=self.api_key, **kwargs)
-
-        http = self.credentials.authorize(httplib2.Http())
-        return discovery.build(service, version, http=http, **kwargs)
+    def __init__(self, resource=None):
+        self.resource = resource
 
     @classmethod
-    def from_service_account(cls, creds_path=None, user=None, scope=SCOPES):
-        from oauth2client.service_account import ServiceAccountCredentials as S
+    def from_api_key(cls, service, version, api_key):
+        """Authorizes a client from an Api Key."""
+
+        if not api_key:
+            raise ValueError('Please provide an API Key.')
+
+        resource = discovery.build(service, version, developerKey=api_key)
+        return cls(resource)
+
+    @classmethod
+    def from_service_account(cls, service, version,
+                             creds_path=None, user=None, scope=[]):
+        """Authorizes a client from an Service Account Credential File."""
 
         if not creds_path:
-            creds_path = os.getenv('GOOGLE_SERVICE_ACCOUNT_CREDENTIALS')
+            err = 'Please provide an a path to your service credentals.'
+            raise ValueError(err)
 
-        if not user:
-            user = os.getenv('GOOGLE_DELEGATED_USER')
-
-        creds_path = os.path.expanduser(creds_path)
-        creds = S.from_json_keyfile_name(creds_path, _gen_scopes(scope))
-
-        # create delegated if user exists
-        if user:
-            creds = creds.create_delegated(user)
-
-        return cls(creds)
+        http_client = service_account_creds(creds_path, user, scope=_gen_scope(scope))
+        resource = discovery.build(service, version, http=http_client)
+        return cls(resource)
 
 
 class GoogleObject(object):
@@ -79,8 +72,6 @@ class GoogleObject(object):
     corresponding one-to-one with Google API Resource
     values.
     """
-
-    _properties = set()
 
     def __init__(self, **kwargs):
         """Set Resource corresponding **kwargs
@@ -98,15 +89,7 @@ class GoogleObject(object):
         intersection of this and _properties
         """
 
-        return_dict = keys_to_camel(vars(self))
-        keys = return_dict.keys()
-
-        # return only defined properties
-        excess_keys = set(keys) - self._properties
-        for key in excess_keys:
-            del return_dict[key]
-
-        return return_dict
+        return keys_to_camel(self.data)
 
 
 from .drive.core import DriveClient

@@ -42,9 +42,7 @@ def _format_sheet(sheet):
             'title': title
         },
         'data': {
-            'rowData': [
-                {'values': _cells_to_row(val)} for val in values
-            ]
+            'rowData': [{'values': _cells_to_row(val)} for val in values]
         }
     }
 
@@ -68,16 +66,11 @@ class SheetsClient(GoogleClient):
 
     """Creates a Google Sheets Resource"""
 
-    def __init__(self, credentials=None, api_key=None, callback=None):
-        """Google Sheets API client, exposes
-        collection resources
-        """
-        super(self.__class__, self).__init__(credentials, api_key)
-        self._resource = self.build('sheets', 'v4')
-
     @classmethod
     def from_service_account(cls, **kwargs):
         kwargs['scope'] = ['spreadsheets']
+        kwargs['service'] = ['sheets']
+        kwargs['version'] = ['v4']
         return super().from_service_account(**kwargs)
 
     def get_spreadsheet(self, id):
@@ -87,7 +80,7 @@ class SheetsClient(GoogleClient):
         :returns: <Spreadsheet> Model
 
         """
-        data = self._resource.spreadsheets().get(
+        data = self.resource.spreadsheets().get(
             spreadsheetId=id
         ).execute()
 
@@ -101,7 +94,7 @@ class SheetsClient(GoogleClient):
         return self.create_spreadsheet(self, formatted_frames, **options)
 
     def create_spreadsheet(self, sheets=[], **kwargs):
-        data = self._resource.spreadsheets().create(
+        data = self.resource.spreadsheets().create(
             body={
                 'properties': kwargs,
                 'sheets': [_format_sheet(s) for s in sheets]
@@ -113,7 +106,7 @@ class SheetsClient(GoogleClient):
     def get_values(self, spreadsheet_id, range_name):
         """Initialize a new block and return it"""
 
-        data = self._resource.spreadsheets().values().get(
+        data = self.resource.spreadsheets().values().get(
             spreadsheetId=spreadsheet_id,
             range=range_name
         ).execute()
@@ -121,7 +114,7 @@ class SheetsClient(GoogleClient):
         return Block.from_existing(data, client=self)
 
     def update_values(self, spreadsheet_id, range_name, values, format='RAW'):
-        data = self._resource.spreadsheets().values().update(
+        data = self.resource.spreadsheets().values().update(
             spreadsheetId=spreadsheet_id,
             range=range_name,
             valueInputOption=format,
@@ -139,7 +132,7 @@ class SheetsClient(GoogleClient):
 
         """
 
-        data = self._resource.spreadsheets().values().append(
+        data = self.resource.spreadsheets().values().append(
             spreadsheetId=spreadsheet_id,
             range=rng,
             valueInputOption='USER_ENTERED',
@@ -150,7 +143,7 @@ class SheetsClient(GoogleClient):
         return Block.from_existing(data, client=self)
 
     def push_updates(self, spreadsheet_id, updates):
-        spreadsheets = self._resource.spreadsheets()
+        spreadsheets = self.resource.spreadsheets()
         spreadsheets.batchUpdate(
             spreadsheetId=spreadsheet_id,
             body={'requests': updates}

@@ -1,5 +1,10 @@
+import os
+import sys
 from distutils.core import setup
 
+if sys.argv[-1] == 'test':
+    os.system('python -sm unittest discover tests "*_test.py"')
+    sys.exit(0)
 
 version = '0.0.3'
 requires = ['google-api-python-client>=1.5.3']
