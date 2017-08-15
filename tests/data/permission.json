@@ -1,0 +1,10 @@
+{
+ "kind": "drive#permission",
+ "id": "abc123",
+ "type": "user",
+ "emailAddress": "test@gmail.com",
+ "role": "reader",
+ "displayName": "Test User",
+ "photoLink": "https://lh3.googleusercontent.com/-raH8poOiUI8/AAAAAAAAAAI/AAAAAAAAAK0/F9SRpENb7zo/s64/photo.jpg",
+ "deleted": false
+}

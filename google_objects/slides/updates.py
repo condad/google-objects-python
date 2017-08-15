@@ -18,7 +18,7 @@ def REPLACE_ALL_TEXT(find, replace, case_sensitive=False):
     }
 
 
-def INSERT_TEXT(obj_id, text, row=None, column=None, start=0):
+def INSERT_TEXT(text, obj_id=None, row=None, column=None, start=0):
     return {
         'insertText': {
             'objectId': obj_id,

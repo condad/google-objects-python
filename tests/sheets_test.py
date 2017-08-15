@@ -25,7 +25,7 @@ class TestSheets(unittest.TestCase):
 
     def test_spreadsheets(self):
         spreadsheet = self.client.get_spreadsheet('abc123')
-        self.assertEqual(type(spreadsheet), Spreadsheet)
+        self.assertIsInstance(spreadsheet, Spreadsheet)
 
         # test spreadsheet properties
         self.assertEqual(spreadsheet.title, 'Test Google Spreadsheet')
@@ -34,18 +34,21 @@ class TestSheets(unittest.TestCase):
     def test_sheets(self):
         spreadsheet = self.client.get_spreadsheet('abc123')
         sheets = spreadsheet.sheets()
+        self.assertIsInstance(sheets, list)
 
         for i, sheet in enumerate(sheets):
-            self.assertEqual(type(sheet), Sheet)
+            self.assertIsInstance(sheet, Sheet)
 
+        # test sheet properties
         first_sheet = sheets[0]
-        self.assertEqual(first_sheet.title, 'CLSFF Fluxx')
+        self.assertEqual(first_sheet.title, 'First Sheet')
+        self.assertEqual(first_sheet.id, 1234)
 
     def test_values(self):
         spreadsheet = self.client.get_spreadsheet('abc123')
         sheets = spreadsheet.sheets()
         values = sheets[0].values()
-        self.assertEqual(type(values), Block)
+        self.assertIsInstance(values, Block)
 
-        for val in values:
-            self.assertEqual(type(val), list)
+        for row in values:
+            self.assertIsInstance(row, list)

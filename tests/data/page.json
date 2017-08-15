@@ -1,0 +1,215 @@
+{
+ "objectId": "p",
+ "pageElements": [
+  {
+   "objectId": "i0",
+   "size": {
+    "width": {
+     "magnitude": 3000000,
+     "unit": "EMU"
+    },
+    "height": {
+     "magnitude": 3000000,
+     "unit": "EMU"
+    }
+   },
+   "transform": {
+    "scaleX": 1.6725,
+    "scaleY": 0.5263,
+    "translateX": 3537150,
+    "translateY": 1578400,
+    "unit": "EMU"
+   },
+   "shape": {
+    "shapeType": "TEXT_BOX",
+    "text": {
+     "textElements": [
+      {
+       "endIndex": 18,
+       "paragraphMarker": {
+        "style": {
+         "direction": "LEFT_TO_RIGHT"
+        }
+       }
+      },
+      {
+       "endIndex": 18,
+       "textRun": {
+        "content": "Test Google Sheet\n",
+        "style": {
+        }
+       }
+      }
+     ]
+    },
+    "shapeProperties": {
+     "shapeBackgroundFill": {
+      "propertyState": "INHERIT"
+     },
+     "outline": {
+      "propertyState": "INHERIT"
+     },
+     "shadow": {
+      "propertyState": "INHERIT"
+     }
+    },
+    "placeholder": {
+     "type": "CENTERED_TITLE",
+     "parentObjectId": "g2445947b05_0_11"
+    }
+   }
+  },
+  {
+   "objectId": "i1",
+   "size": {
+    "width": {
+     "magnitude": 3000000,
+     "unit": "EMU"
+    },
+    "height": {
+     "magnitude": 3000000,
+     "unit": "EMU"
+    }
+   },
+   "transform": {
+    "scaleX": 1.1569,
+    "scaleY": 0.1687,
+    "translateX": 5083950,
+    "translateY": 3924925,
+    "unit": "EMU"
+   },
+   "shape": {
+    "shapeType": "TEXT_BOX",
+    "text": {
+     "textElements": [
+      {
+       "endIndex": 39,
+       "paragraphMarker": {
+        "style": {
+         "direction": "LEFT_TO_RIGHT"
+        }
+       }
+      },
+      {
+       "endIndex": 39,
+       "textRun": {
+        "content": "Testing python google objects library.\n",
+        "style": {
+        }
+       }
+      }
+     ]
+    },
+    "shapeProperties": {
+     "shapeBackgroundFill": {
+      "propertyState": "INHERIT"
+     },
+     "outline": {
+      "propertyState": "INHERIT"
+     },
+     "shadow": {
+      "propertyState": "INHERIT"
+     }
+    },
+    "placeholder": {
+     "type": "SUBTITLE",
+     "parentObjectId": "g2445947b05_0_12"
+    }
+   }
+  }
+ ],
+ "slideProperties": {
+  "layoutObjectId": "g2445947b05_0_4",
+  "masterObjectId": "g2445947b05_0_0",
+  "notesPage": {
+   "objectId": "p:notes",
+   "pageType": "NOTES",
+   "pageElements": [
+    {
+     "objectId": "i2",
+     "size": {
+      "width": {
+       "magnitude": 3000000,
+       "unit": "EMU"
+      },
+      "height": {
+       "magnitude": 3000000,
+       "unit": "EMU"
+      }
+     },
+     "transform": {
+      "scaleX": 2.032025,
+      "scaleY": 1.143,
+      "translateX": 381300,
+      "translateY": 685800,
+      "unit": "EMU"
+     },
+     "shape": {
+      "shapeProperties": {
+       "outline": {
+        "propertyState": "INHERIT"
+       }
+      },
+      "placeholder": {
+       "type": "SLIDE_IMAGE",
+       "parentObjectId": "n:slide"
+      }
+     }
+    },
+    {
+     "objectId": "i3",
+     "size": {
+      "width": {
+       "magnitude": 3000000,
+       "unit": "EMU"
+      },
+      "height": {
+       "magnitude": 3000000,
+       "unit": "EMU"
+      }
+     },
+     "transform": {
+      "scaleX": 1.8288,
+      "scaleY": 1.3716,
+      "translateX": 685800,
+      "translateY": 4343400,
+      "unit": "EMU"
+     },
+     "shape": {
+      "shapeType": "TEXT_BOX",
+      "shapeProperties": {
+       "shapeBackgroundFill": {
+        "propertyState": "INHERIT"
+       },
+       "outline": {
+        "propertyState": "INHERIT"
+       },
+       "shadow": {
+        "propertyState": "INHERIT"
+       }
+      },
+      "placeholder": {
+       "type": "BODY",
+       "index": 1,
+       "parentObjectId": "n:text"
+      }
+     }
+    }
+   ],
+   "pageProperties": {
+    "pageBackgroundFill": {
+     "propertyState": "INHERIT"
+    }
+   },
+   "notesProperties": {
+    "speakerNotesObjectId": "i3"
+   }
+  }
+ },
+ "revisionId": "LLXjyTB4tNNybg",
+ "pageProperties": {
+  "pageBackgroundFill": {
+   "propertyState": "INHERIT"
+  }
+ }
+}

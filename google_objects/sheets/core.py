@@ -69,8 +69,8 @@ class SheetsClient(GoogleClient):
     @classmethod
     def from_service_account(cls, **kwargs):
         kwargs['scope'] = ['spreadsheets']
-        kwargs['service'] = ['sheets']
-        kwargs['version'] = ['v4']
+        kwargs['service'] = 'sheets'
+        kwargs['version'] = 'v4'
         return super().from_service_account(**kwargs)
 
     def get_spreadsheet(self, id):
@@ -86,7 +86,26 @@ class SheetsClient(GoogleClient):
 
         return Spreadsheet.from_existing(data, self)
 
+    def create_spreadsheet_from_dataframe(self, frame, **options):
+        """Creates a new Google Spreadsheet with a provided pandas.DataFrame
+        object and options.
+
+        :frame: pandas.DataFrame
+        :**options: Google Spreadsheet initialization options
+        :returns: Spreadsheet
+
+        """
+        self.create_spreadsheet_from_dataframes([frame], **options)
+
     def create_spreadsheet_from_dataframes(self, *frames, **options):
+        """Creates a new Google Spreadsheet with a provided pandas.DataFrame
+        objects and options.
+
+        :frame: pandas.DataFrame
+        :**options: Google Spreadsheet initialization options
+        :returns: Spreadsheet
+
+        """
         if not frames:
             raise ValueError
 
@@ -163,42 +182,17 @@ class Spreadsheet(GoogleObject):
         # initalize the other properties
         super(self.__class__, self).__init__(**kwargs)
 
-    def __iter__(self):
-        return self.yield_sheets()
-
-    def __getitem__(self, key):
-        try:
-            if key.isdigit():
-                return self.get_sheet_by_id(key)
-            else:
-                return self.get_sheet_by_name(key)
-        except ValueError:
-            raise TypeError('Sheet not found')
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exception_type, exception_value, traceback):
-        self.update()
-
-    @classmethod
-    def from_existing(cls, data, client=None):
-        """initiates using existing Spreadsheet resource"""
-
-        new_data = keys_to_snake(data)
-        return cls(client, **new_data)
-
     @property
     def id(self):
-        return self._spreadsheet_id
+        return self.data['spreadsheet_id']
 
     @property
     def title(self):
-        return self._properties.get('title')
+        return self.data['properties']['title']
 
     @title.setter
     def title(self, value):
-        self._properties['title'] = value
+        self.data['properties']['title'] = value
 
     def sheets(self):
         return [sheet for sheet in self.yield_sheets()]
@@ -222,7 +216,7 @@ class Spreadsheet(GoogleObject):
         raise ValueError
 
     def yield_sheets(self):
-        for sheet in self._sheets:
+        for sheet in self.data['sheets']:
             yield Sheet.from_existing(sheet, self)
 
     def get_range(self, sheet_range):
@@ -255,14 +249,32 @@ class Spreadsheet(GoogleObject):
 
             return rng
 
-        _named_ranges = map(set_sheet_id, self._named_ranges)
+        _named_ranges = map(set_sheet_id, self.datanamed_ranges)
         return [NamedRange(self, each) for each in _named_ranges]
 
     def update(self):
         if self.__updates:
-            self.client.push_updates(self._id, self._updates)
+            self.client.push_updates(self.dataid, self._updates)
             # TODO: add success handlers
             del self._updates[:]
+
+    def __iter__(self):
+        return self.yield_sheets()
+
+    def __getitem__(self, key):
+        try:
+            if key.isdigit():
+                return self.get_sheet_by_id(key)
+            else:
+                return self.get_sheet_by_name(key)
+        except ValueError:
+            raise TypeError('Sheet not found')
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exception_type, exception_value, traceback):
+        self.update()
 
 
 class NamedRange(object):
@@ -348,23 +360,23 @@ class Sheet(GoogleObject):
 
     @property
     def properties(self):
-        return self._properties
+        return self.data['properties']
 
     @properties.setter
     def properties(self, value):
         if 'sheet_id' in value:
-            self._properties['sheet_id'] = value['sheet_id']
+            self.properties['sheet_id'] = value['sheet_id']
 
         if 'title' in value:
-            self._properties['title'] = value['title']
+            self.properties['title'] = value['title']
 
     @property
     def id(self):
-        return self._properties.get('sheet_id')
+        return self.properties.get('sheet_id')
 
     @property
     def title(self):
-        return self._properties.get('title')
+        return self.properties.get('title')
 
     @property
     def name(self):
@@ -372,7 +384,7 @@ class Sheet(GoogleObject):
 
     @title.setter
     def title(self, value):
-        self._properties['title'] = value
+        self.properties['title'] = value
 
     def values(self, start=None, end=None):
         """Returns <Block> consisting of all sheet data"""
@@ -414,43 +426,36 @@ class Block(GoogleObject):
         self.update()
 
     def update(self):
-        self.client.update_values(self.spreadsheet.id, self._range, self.values)
+        self.client.update_values(self.spreadsheet.id, self.range, self.values)
 
     def append(self, data):
-        self.client.append_values(self.spreadsheet.id, self._range, data)
+        self.client.append_values(self.spreadsheet.id, self.range, data)
 
     def yield_cells(self):
         for row in self.yield_rows():
             for cell in row:
                 yield cell
 
-    @property
     def cells(self):
         return [cell for cell in self.yield_cells()]
 
     def yield_rows(self):
-        for row in self._values:
+        for row in self.values:
             yield row
 
-    @property
     def rows(self):
         return [row for row in self.yield_rows()]
 
     @property
     def values(self):
-        return self._values
-
-    @property
-    def raw_data(self):
-        # legacy, will be deprecated soon
-        return self.values
+        return self.data['values']
 
     @property
     def range(self):
-        return self._range
+        return self.data['range']
 
     def __getitem__(self, key):
-        return self._values[key]
+        return self.values['key']
 
     def __setitem__(self, key, item):
-        self._values[key] = item
+        self.values[key] = item

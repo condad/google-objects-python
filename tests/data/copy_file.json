@@ -1,0 +1,81 @@
+{
+ "kind": "drive#file",
+ "id": "1Av-N_qtP7Slbs_TkrtCOqt2V3DVrqQbumOaukm-eR8c",
+ "name": "Copy of Test File",
+ "mimeType": "application/vnd.google-apps.document",
+ "starred": false,
+ "trashed": false,
+ "explicitlyTrashed": false,
+ "parents": [
+  "p1"
+ ],
+ "spaces": [
+  "drive"
+ ],
+ "version": "45317",
+ "webViewLink": "https://docs.google.com/document/d/1Av-N_qtP7Slbs_TkrtCOqt2V3DVrqQbumOaukm-eR8c/edit?usp=drivesdk",
+ "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/vnd.google-apps.document",
+ "hasThumbnail": false,
+ "thumbnailVersion": "0",
+ "viewedByMe": true,
+ "viewedByMeTime": "2017-08-13T14:46:00.966Z",
+ "createdTime": "2017-08-13T14:47:35.643Z",
+ "modifiedTime": "2017-08-13T14:47:35.643Z",
+ "modifiedByMeTime": "2017-08-13T14:47:35.643Z",
+ "modifiedByMe": true,
+ "owners": [
+  {
+   "kind": "drive#user",
+   "displayName": "Test User",
+   "photoLink": "https://lh3.googleusercontent.com/-raH8poOiUI8/AAAAAAAAAAI/AAAAAAAAAK0/F9SRpENb7zo/s64/photo.jpg",
+   "me": true,
+   "permissionId": "15318812001084474652",
+   "emailAddress": "test@gmail.com"
+  }
+ ],
+ "lastModifyingUser": {
+  "kind": "drive#user",
+  "displayName": "Test User",
+  "photoLink": "https://lh3.googleusercontent.com/-raH8poOiUI8/AAAAAAAAAAI/AAAAAAAAAK0/F9SRpENb7zo/s64/photo.jpg",
+  "me": true,
+  "permissionId": "15318812001084474652",
+  "emailAddress": "test@gmail.com"
+ },
+ "shared": false,
+ "ownedByMe": true,
+ "capabilities": {
+  "canAddChildren": false,
+  "canChangeViewersCanCopyContent": true,
+  "canComment": true,
+  "canCopy": true,
+  "canDelete": true,
+  "canDownload": true,
+  "canEdit": true,
+  "canListChildren": false,
+  "canMoveItemIntoTeamDrive": true,
+  "canReadRevisions": true,
+  "canRemoveChildren": false,
+  "canRename": true,
+  "canShare": true,
+  "canTrash": true,
+  "canUntrash": true
+ },
+ "viewersCanCopyContent": true,
+ "writersCanShare": true,
+ "permissions": [
+  {
+
+
+   "kind": "drive#permission",
+   "id": "15318812001084474652",
+   "type": "user",
+   "emailAddress": "test@gmail.com",
+   "role": "owner",
+   "displayName": "Test User",
+   "photoLink": "https://lh3.googleusercontent.com/-raH8poOiUI8/AAAAAAAAAAI/AAAAAAAAAK0/F9SRpENb7zo/s64/photo.jpg",
+   "deleted": false
+  }
+ ],
+ "quotaBytesUsed": "0",
+ "isAppAuthorized": true
+}

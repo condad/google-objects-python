@@ -7,28 +7,14 @@ Google Slides API
 
 """
 
-import re
 import logging
+import functools
 
-from apiclient.errors import HttpError
-
-import google_objects.slides.updates
+from google_objects.slides import updates
 from google_objects import GoogleClient, GoogleObject
 from google_objects.utils import keys_to_snake, set_private_attrs
 
 log = logging.getLogger(__name__)
-
-
-"""
-REMOVE GET_MATCHES() on Presentation
-"""
-
-# TODO:
-    # i/ ensure all cell data reflects table row insertion and deletion
-    # ii/ page title and descriptor need to be found and initialized
-    # iii/ change .from_existing to .from_raw
-    # iv/ add Text nested class for Shape & Table
-    # v/ generate elements from PageElement constructor using __subclasses__
 
 
 class SlidesClient(GoogleClient):
@@ -43,9 +29,12 @@ class SlidesClient(GoogleClient):
     are handled by its <Presentation> object.
     """
 
-    def __init__(self, credentials=None, api_key=None):
-        super(SlidesClient, self).__init__(credentials, api_key)
-        self._resource = self.build('slides', 'v1')
+    @classmethod
+    def from_service_account(cls, **kwargs):
+        kwargs['scope'] = ['slides']
+        kwargs['service'] = 'slides'
+        kwargs['version'] = 'v1'
+        return super().from_service_account(**kwargs)
 
     def get_presentation(self, presentation_id):
         """Returns a Presentation Object
@@ -54,7 +43,7 @@ class SlidesClient(GoogleClient):
         :returns: <Presentation> Model
 
         """
-        data = self._resource.presentations().get(
+        data = self.resource.presentations().get(
             presentationId=presentation_id
         ).execute()
 
@@ -67,7 +56,7 @@ class SlidesClient(GoogleClient):
         :returns: <Page> Model
 
         """
-        data = self._resource.presentations().pages().get(
+        data = self.resource.presentations().pages().get(
             presentationId=presentation_id,
             pageObjectId=page_id
         ).execute()
@@ -78,7 +67,7 @@ class SlidesClient(GoogleClient):
         """Push Update Requests to Presentation API,
         throw errors if necessary.
         """
-        self._resource.presentations().batchUpdate(
+        self.resource.presentations().batchUpdate(
             presentationId=presentation_id,
             body={'requests': updates}
         ).execute()
@@ -106,25 +95,20 @@ class Presentation(GoogleObject):
         """
         self.client = client
         self.__updates = []
+        self.data = kwargs
 
-        super(Presentation, self).__init__(**kwargs)
+        # super(Presentation, self).__init__(**kwargs)
 
     @classmethod
-    def from_existing(cls, data, client=None):
-        """initiates using existing Spreadsheet resource"""
-
-        new_data = keys_to_snake(data)
-        return cls(client, **new_data)
+    def from_existing(cls, data, *args):
+        return cls(*args, **data)
 
     def __enter__(self):
         return self
 
     def __exit__(self, ex_type, ex_val, traceback):
-        try:
-            self.update()
-            return True
-        except HttpError as e:
-            raise e
+        self.update()
+        return True
 
     def __iter__(self):
         for page in self.slides():
@@ -132,7 +116,7 @@ class Presentation(GoogleObject):
 
     @property
     def id(self):
-        return self._presentation_id
+        return self.data['presentationId']
 
     def update(self):
         if self.__updates:
@@ -157,13 +141,13 @@ class Presentation(GoogleObject):
             return False
 
     def slides(self):
-        return [Page(self, **slide) for slide in self._slides]
+        return [Page(self, **slide) for slide in self.data['slides']]
 
     def masters(self):
-        return [Page(self, **slide) for slide in self._masters]
+        return [Page(self, **slide) for slide in self.data['masters']]
 
     def layouts(self):
-        return [Page(self, **slide) for slide in self._layouts]
+        return [Page(self, **slide) for slide in self.data['layouts']]
 
     def elements(self):
         for page in self.slides():
@@ -174,9 +158,8 @@ class Presentation(GoogleObject):
         """Add update request for presentation-wide
         replacement with arg:find to arg:replace
         """
-        self.add_update(
-            updates.REPLACE_ALL_TEXT(str(find), str(replace), case_sensitive)
-        )
+        ud = updates.REPLACE_ALL_TEXT(str(find), str(replace), case_sensitive)
+        self.add_update(ud)
 
     def get_element_by_id(self, element_id):
         """Retrieves an element within this presentation identified
@@ -209,18 +192,13 @@ class Page(GoogleObject):
 
     def __init__(self, presentation=None, **kwargs):
         self.presentation = presentation
-        super(Page, self).__init__(**kwargs)
-
-    @classmethod
-    def from_existing(cls, data, presentation=None):
-        """initiates using existing Spreadsheet resource"""
-
-        new_data = keys_to_snake(data)
-        return cls(presentation, **new_data)
+        self.data = kwargs
+        # super(Page, self).__init__(**kwargs)
 
     @property
     def id(self):
-        return self._object_id
+        return self.data['objectId']
+
     @property
     def read_only(self):
         if not self.presentation:
@@ -236,27 +214,27 @@ class Page(GoogleObject):
 
         """
         if 'shape' in element:
-            log.debug('Shape %s loaded.', element['object_id'])
+            log.debug('Shape %s loaded.', element['objectId'])
             return Shape(self.presentation, self, **element)
         elif 'table' in element:
-            log.debug('Table %s loaded.', element['object_id'])
+            log.debug('Table %s loaded.', element['objectId'])
             return Table(self.presentation, self, **element)
         elif 'element_group' in element:
-            log.debug('Element Group %s loaded.', element['object_id'])
+            log.debug('Element Group %s loaded.', element['objectId'])
             return [self.__load_element(each) for each in element['children']]
 
         # TODO: Implement the following constructors
         elif 'image' in element:
-            log.debug('Image %s loaded.', element['object_id'])
+            log.debug('Image %s loaded.', element['objectId'])
             return PageElement(self.presentation, self, **element)
         elif 'video' in element:
-            log.debug('Video %s loaded.', element['object_id'])
+            log.debug('Video %s loaded.', element['objectId'])
             return PageElement(self.presentation, self, **element)
         elif 'word_art' in element:
-            log.debug('Word Art %s loaded.', element['object_id'])
+            log.debug('Word Art %s loaded.', element['objectId'])
             return PageElement(self.presentation, self, **element)
         elif 'sheets_chart' in element:
-            log.debug('Sheets Chart %s loaded.', element['object_id'])
+            log.debug('Sheets Chart %s loaded.', element['objectId'])
             return PageElement(self.presentation, self, **element)
 
     def yield_elements(self, __sub_list=[]):
@@ -266,7 +244,7 @@ class Page(GoogleObject):
         is only to add recursive list flattening with respect to
         nested element groups.
         """
-        for element in __sub_list or self._page_elements:
+        for element in __sub_list or self.data['pageElements']:
             if isinstance(element, list):
                 self.yield_elements(element)
 
@@ -321,20 +299,20 @@ class PageElement(GoogleObject):
     def __init__(self, presentation=None, page=None, **kwargs):
         self.presentation = presentation
         self.page = page
-
-        super(PageElement, self).__init__(**kwargs)
+        self.data = kwargs
+        # super(PageElement, self).__init__(**kwargs)
 
     @property
     def id(self):
-        return self._object_id
+        return self.data['objectId']
 
     @property
     def size(self):
-        return self._size
+        return self.data['size']
 
     @property
     def transform(self):
-        return self._transform
+        return self.data['transform']
 
     def update(self, update):
         return self.presentation.add_update(update)
@@ -343,9 +321,8 @@ class PageElement(GoogleObject):
         """Adds deleteObject request to
         presentation updates list.
         """
-        self.presentation.add_update(
-            updates.DELETE_OBJECT(self._id)
-        )
+        ud = updates.DELETE_OBJECT(self.data.id)
+        self.presentation.add_update(ud)
 
 
 class Shape(PageElement):
@@ -361,17 +338,17 @@ class Shape(PageElement):
 
     @property
     def text(self):
-        if hasattr(self, '_text'):
+        if self.data.get('text'):
             return TextContent(
                 self.presentation,
                 self.page,
                 self,
-                **self._text
+                **self.data['text']
             )
 
     @property
     def type(self):
-        return self._shape_type
+        return self.data['shapeType']
 
 
 class Table(PageElement):
@@ -392,18 +369,18 @@ class Table(PageElement):
         return self.cells()
 
     def rows(self):
-        for row in self._table_rows:
-            yield [self.Cell(self, cell) for cell in row.get('table_cells')]
+        for row in self.data['tableRows']:
+            yield [self.Cell(self, cell) for cell in row.get('tableCells')]
 
     def cells(self):
-        for row in self._table_rows:
-            for cell in row.get('table_cells'):
+        for row in self.data['tableRows']:
+            for cell in row.get('tableCells'):
                 yield self.Cell(self, **cell)
 
     def get_cell(self, row, column):
         """Fetches cell data and returns as object."""
 
-        cell_data = self._table_rows[row]['table_cells'][column]
+        cell_data = self.data['tableRows'][row]['tableCells'][column]
         return self.Cell(self, **cell_data)
 
     class Cell(GoogleObject):
@@ -420,20 +397,24 @@ class Table(PageElement):
                     self.table.presentation,
                     self.table.page,
                     self.table,
-                    **self._text
+                    **self.data.text
                 )
 
         @property
+        def location(self):
+            return self.data['location']
+
+        @property
         def row_index(self):
-            return self._location.get('row_index')
+            return self.location['row_index']
 
         @property
         def column_index(self):
-            return self._location.get('column_index')
+            return self.location['column_index']
 
         @property
-        def location(self):
-            return (self.row_index, self.column_index)
+        def position(self):
+            return self.row_index, self.column_index
 
 
 class TextContent(GoogleObject):
@@ -446,77 +427,98 @@ class TextContent(GoogleObject):
         self.presentation = presentation
         self.page = page
         self.element = element
+        self.data = kwargs
+        # super(TextContent, self).__init__(**kwargs)
 
-        super(TextContent, self).__init__(**kwargs)
+    def yield_elements(self):
+        for text_element in self.data['textElements']:
+            yield TextElement(self, self.element, **text_element)
+
+    def elements(self):
+        return [elem for elem in self.yield_elements()]
 
     def __iter__(self):
-        for text_element in self._text_elements:
-            yield self.TextElement(self, self.element, **text_element)
+        self.yield_elements()
 
-    class TextElement(GoogleObject):
 
-        _properties = {
-            'startIndex',
-            'endIndex',
-            'paragraphMarker',
-            'textRun',
-            'autoText'
-        }
+class TextElement(GoogleObject):
 
-        def __init__(self, text_content, page_element, **kwargs):
-            self.text_content = text_content
-            self.page_element = page_element
-            super(TextContent.TextElement, self).__init__(**kwargs)
+    _properties = {
+        'startIndex',
+        'endIndex',
+        'paragraphMarker',
+        'textRun',
+        'autoText'
+    }
 
-        @property
-        def start_index(self):
-            return self._start_index
+    def __init__(self, text_content, page_element, **kwargs):
+        self.text_content = text_content
+        self.page_element = page_element
+        self.data = kwargs
 
-        @property
-        def end_index(self):
-            return self._end_index
+        # set update partials
+        self.delete_text = functools.partial(
+            updates.DELETE_TEXT,
+            row=getattr(self.page_element, 'startIndex', None),
+            col=getattr(self.page_element, 'endIndex', None),
+            start=self.startIndex,
+            end=self.end_index
+        )
+        self.insert_text = functools.partial(
+            updates.INSERT_TEXT,
+            obj_id=self.id,
+            start=self.start_index
+        )
 
-        @property
-        def text(self):
-            if hasattr(self, '_text_run'):
-                return self._text_run['content']
+        # super(TextContent.TextElement, self).__init__(**kwargs)
 
-        @text.setter
-        def text(self, value):
-            if not self._text:
-                self.page_element.update(
-                    updates.DELETE_TEXT(
-                        self.page_element.id,
-                        row=getattr(self.page_element, 'start_index', None),
-                        col=getattr(self.page_element, 'end_index', None),
-                        start=self.start_index,
-                        end=self.end_index
-                    )
-                )
+    @property
+    def start_index(self):
+        return self.data['startIndex']
 
-            update_request = updates.INSERT_TEXT(
-                self.id, value, start=self.start_index
+    @property
+    def end_index(self):
+        return self.data['endIndex']
+
+    @property
+    def segment(self):
+        return self.start_index, self.end_index
+
+    @property
+    def text_run(self):
+        return self.data.get('text_run')
+
+    @property
+    def text(self):
+        if self.text_run:
+            return self.text_run['content']
+
+    @text.setter
+    def text(self, value):
+        if not self.data.text:
+            ud = updates.DELETE_TEXT(
+                self.page_element.id,
+                row=getattr(self.page_element, 'startIndex', None),
+                col=getattr(self.page_element, 'endIndex', None),
+                start=self.start_index,
+                end=self.end_index
             )
-            self.page_element.update(update_request)
+            self.page_element.update(ud)
 
-            self._text_run['content'] = value
+        update_request = updates.INSERT_TEXT(
+            value, self.id, start=self.start_index
+        )
+        self.page_element.update(update_request)
 
-        @text.deleter
-        def text(self):
-            obj_id = self.page_element.id
-            update_request = updates.DELETE_TEXT(
-                obj_id, start=self.start_index, end=self.end_index
-            )
-            self.page_element.update(update_request)
+        self.text_run['content'] = value
 
-        def match(self, regex):
-            """Returns True or False if regular expression
-            matches the text inside.
-            """
-            if self.text and re.match(regex, self.text):
-                return True
-            else:
-                return False
+    @text.deleter
+    def text(self):
+        obj_id = self.page_element.id
+        update_request = updates.DELETE_TEXT(
+            obj_id, start=self.start_index, end=self.end_index
+        )
+        self.page_element.update(update_request)
 
-        def __str__(self):
-            return self.text
+    def __str__(self):
+        return self.text

@@ -1,0 +1,84 @@
+{
+ "kind": "drive#file",
+ "id": "abc123",
+ "name": "Test File",
+ "mimeType": "application/vnd.google-apps.document",
+ "starred": false,
+ "trashed": false,
+ "explicitlyTrashed": false,
+ "parents": [
+  "p1",
+  "p2",
+  "p3"
+ ],
+ "spaces": [
+  "drive"
+ ],
+ "version": "45306",
+ "webViewLink": "https://docs.google.com/document/d/1SVLYfA2AaZ6-AIlE92385LTjVnM2goCas04u65D2wMg/edit?usp=drivesdk",
+ "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/vnd.google-apps.document",
+ "hasThumbnail": true,
+ "thumbnailLink": "https://docs.google.com/feeds/vt?gd=true&id=1SVLYfA2AaZ6-AIlE92385LTjVnM2goCas04u65D2wMg&v=10&s=AMedNnoAAAAAWZCBzEspAQdLJrR67msnrMw8_E5waUNw&sz=s220",
+ "thumbnailVersion": "10",
+ "viewedByMe": true,
+ "viewedByMeTime": "2017-08-13T14:42:48.411Z",
+ "createdTime": "2017-02-22T20:05:19.576Z",
+ "modifiedTime": "2017-02-22T20:33:56.207Z",
+ "modifiedByMeTime": "2017-02-22T20:33:56.207Z",
+ "modifiedByMe": true,
+ "owners": [
+  {
+   "kind": "drive#user",
+   "displayName": "Test User",
+   "photoLink": "https://lh3.googleusercontent.com/-raH8poOiUI8/AAAAAAAAAAI/AAAAAAAAAK0/F9SRpENb7zo/s64/photo.jpg",
+   "me": true,
+   "permissionId": "15318812001084474652",
+   "emailAddress": "test@gmail.com"
+  }
+ ],
+ "lastModifyingUser": {
+  "kind": "drive#user",
+  "displayName": "Test User",
+  "photoLink": "https://lh3.googleusercontent.com/-raH8poOiUI8/AAAAAAAAAAI/AAAAAAAAAK0/F9SRpENb7zo/s64/photo.jpg",
+  "me": true,
+  "permissionId": "15318812001084474652",
+  "emailAddress": "test@gmail.com"
+ },
+ "shared": false,
+ "ownedByMe": true,
+ "capabilities": {
+  "canAddChildren": false,
+  "canChangeViewersCanCopyContent": true,
+  "canComment": true,
+  "canCopy": true,
+  "canDelete": true,
+  "canDownload": true,
+  "canEdit": true,
+  "canListChildren": false,
+  "canMoveItemIntoTeamDrive": true,
+  "canReadRevisions": true,
+  "canRemoveChildren": false,
+  "canRename": true,
+  "canShare": true,
+  "canTrash": true,
+  "canUntrash": true
+ },
+ "viewersCanCopyContent": true,
+ "writersCanShare": true,
+ "permissions": [
+  {
+
+
+   "kind": "drive#permission",
+   "id": "15318812001084474652",
+   "type": "user",
+   "emailAddress": "test@gmail.com",
+   "role": "owner",
+   "displayName": "Test User",
+   "photoLink": "https://lh3.googleusercontent.com/-raH8poOiUI8/AAAAAAAAAAI/AAAAAAAAAK0/F9SRpENb7zo/s64/photo.jpg",
+   "deleted": false
+  }
+ ],
+ "quotaBytesUsed": "0",
+ "isAppAuthorized": false
+}

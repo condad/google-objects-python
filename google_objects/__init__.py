@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-import os
 import logging
 
 from apiclient import discovery
@@ -8,16 +7,6 @@ from apiclient import discovery
 from google_objects.auth import service_account_creds
 from google_objects.utils import set_private_attrs
 from google_objects.utils import keys_to_snake, keys_to_camel
-
-SCOPES = {
-    'drive',
-    'spreadsheets'
-}
-
-
-def _gen_scopes(scopes):
-    return ['https://www.googleapis.com/auth/' + each for each in scopes]
-
 
 # sets default logging handler to avoid "No handler found" warnings.
 try:
@@ -61,7 +50,7 @@ class GoogleClient(object):
             err = 'Please provide an a path to your service credentals.'
             raise ValueError(err)
 
-        http_client = service_account_creds(creds_path, user, scope=_gen_scope(scope))
+        http_client = service_account_creds(creds_path, user, scope=scope)
         resource = discovery.build(service, version, http=http_client)
         return cls(resource)
 
@@ -77,18 +66,17 @@ class GoogleObject(object):
         """Set Resource corresponding **kwargs
         to private attributes.
         """
+        self.data = keys_to_snake(kwargs)
         set_private_attrs(self, kwargs)
 
     @classmethod
     def from_existing(cls, data, *args):
-        new_data = keys_to_snake(data)
-        return cls(*args, **new_data)
+        return cls(*args, **data)
 
     def serialize(self):
         """convert __dict__ keys to camel case, get
         intersection of this and _properties
         """
-
         return keys_to_camel(self.data)
 
 

@@ -1,7 +1,16 @@
 import os
 
 import httplib2
-from apiclient import discovery
+# from apiclient import discovery
+
+_SCOPES = {
+    'drive',
+    'spreadsheets'
+}
+
+
+def _gen_scopes(scopes):
+    return ['https://www.googleapis.com/auth/' + each for each in scopes]
 
 
 def service_account_creds(creds_path, delegated_user=None, scope=None):
@@ -24,21 +33,3 @@ def service_account_creds(creds_path, delegated_user=None, scope=None):
         creds = creds.create_delegated(user)
 
     return creds.authorize(httplib2.Http())
-
-
-def build_resource(service, version, creds=None, api_key=None, **kwargs):
-    """Create an API specific HTTP resource."""
-
-    if not (api_key or creds):
-        raise ValueError('Credentials or API Key Required')
-
-    if api_key:
-        resource = discovery.build(
-            service, version, developerKey=api_key, **kwargs
-        )
-
-    if creds:
-        http = creds.authorize(httplib2.Http())
-        resource = discovery.build(service, version, http=http, **kwargs)
-
-    return resource

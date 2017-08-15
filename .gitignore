@@ -10,3 +10,4 @@ build/
 *_creds.json
 .cache/
 .env
+env.sh

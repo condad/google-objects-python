@@ -30,16 +30,15 @@ class DriveClient(GoogleClient):
     callback: receving webook URL.
     """
 
-    def __init__(self, credentials=None, api_key=None, callback=None):
-        """Google Drive API client, exposes
-        collection resources
-        """
-        super(self.__class__, self).__init__(credentials, api_key)
-        self._resource = self.build('drive', 'v3')
-        self.callback = callback
+    @classmethod
+    def from_service_account(cls, **kwargs):
+        kwargs['scope'] = ['drive']
+        kwargs['service'] = 'drive'
+        kwargs['version'] = 'v3'
+        return super().from_service_account(**kwargs)
 
     def get_about(self, fields=['user']):
-        data = self._resource.about().get(
+        data = self.resource.about().get(
             fields=', '.join(fields)
         ).execute()
 
@@ -54,7 +53,7 @@ class DriveClient(GoogleClient):
 
         """
 
-        data = self._resource.files().get(
+        data = self.resource.files().get(
             fileId=file_id
         ).execute()
 
@@ -71,11 +70,11 @@ class DriveClient(GoogleClient):
 
         # get old file metadata if none provided
         if not file_body:
-            file_body = self._resource.files().get(
+            file_body = self.resource.files().get(
                 fileId=file_id
             ).execute()
 
-        new_file = self._resource.files().copy(
+        new_file = self.resource.files().copy(
             fileId=file_id,
             body=file_body,
             fields='id, webViewLink'
@@ -83,7 +82,8 @@ class DriveClient(GoogleClient):
 
         return File.from_existing(new_file, self)
 
-    def list_files(self, file_type=None, parents=[], fields=['files(id, name)']):
+    def list_files(self, file_type=None,
+                   parents=[], fields=['files(id, name)']):
         """Shows basic usage of the Google Drive API.
 
         Creates a Google Drive API service object and outputs the names and IDs
@@ -95,21 +95,21 @@ class DriveClient(GoogleClient):
 
         query = ''
         if file_type:
+            prfx = 'application/vnd.google-apps.'
             query = query + "mimeType='{}'".format('application/vnd.google-apps.' + file_type.lower())
         for p in parents:
             query = query + ' and \'{}\' in parents'.format(p)
 
-        result = self._resource.files().list(
-            q=query,
-            pageSize=100,
-            # fields=fields
+        result = self.resource.files().list(
+            q=query, pageSize=100,  # fields=fields
         ).execute()
 
         files = result.get('files')
 
         return [File.from_existing(each, self) for each in files]
 
-    def watch_file(self, file_id, channel_id=str(uuid.uuid4()), callback=None, type='webhook'):
+    def watch_file(self, file_id,
+                   channel_id=None, callback=None, type='webhook'):
         """Commences push notifications for a file resource,
         depends on callback url being set on instance.
 
@@ -121,20 +121,20 @@ class DriveClient(GoogleClient):
             raise ValueError('Callback URL required to watch resources.')
 
         req_body = {
-            'id': channel_id,
+            'id': channel_id or str(uuid.uuid4()),
             'type': type,
             'address': callback or self.callback
         }
-        result = self._resource.files().watch(
-            fileId=file_id,
-            body=req_body
+        result = self.resource.files().watch(
+            fileId=file_id, body=req_body
         ).execute()
 
         return keys_to_snake(result)
 
-    def create_permission(self, file_id, permission, message=None, notification=True):
+    def create_permission(self, file_id,
+                          permission, message=None, notification=True):
         # makes api call
-        data = self._resource.permissions().create(
+        data = self.resource.permissions().create(
             fileId=file_id,
             body=permission,
             emailMessage=message,
@@ -148,24 +148,25 @@ class About(GoogleObject):
 
     """Docstring for User Resource, this is READ ONLY"""
 
-    def __init__(self, **kwargs):
-        super(self.__class__, self).__init__(**kwargs)
+    @property
+    def user(self):
+        return self.data['user']
 
     @property
     def email(self):
-        return self._user['email_address']
+        return self.user['emailAddress']
 
     @property
     def name(self):
-        return self._user['display_name']
+        return self.user['displayName']
 
     @property
     def photo(self):
-        return self._user['photo_link']
+        return self.user['photoLink']
 
     @property
     def permission_id(self):
-        return self._user['permission_id']
+        return self.user['permissionId']
 
 
 class File(GoogleObject):
@@ -205,38 +206,32 @@ class File(GoogleObject):
         self.__new_permissions = []
         self.__updates = []
 
-        self.type = kwargs.pop('type', self._default_type)
-        self.parents = kwargs.pop('parents', [])
-
         # initalize the other properties
         super(self.__class__, self).__init__(**kwargs)
 
-    @classmethod
-    def from_existing(cls, data, client):
-        """initiates existing permissions object"""
-
-        new_data = keys_to_snake(data)
-        return cls(client, **new_data)
-
     @property
     def id(self):
-        return self._id or None
+        return self.data['id'] or None
 
     @property
     def name(self):
-        return self._name or None
+        return self.data['name'] or None
 
     @name.setter
     def name(self, val):
-        self._name = val
+        self.data['name'] = val
 
     @property
     def url(self):
-        return self._web_view_link
+        return self.data['web_view_link']
+
+    @property
+    def type_prefix(self):
+        return self.data['type_prefix']
 
     @property
     def type(self):
-        return self._mime_type
+        return self.data['mime_type']
 
     @type.setter
     def type(self, value):
@@ -249,7 +244,7 @@ class File(GoogleObject):
         if value not in self._types:
             raise ValueError
 
-        self._mime_type = '{}{}'.format(self._type_prefix, file_type)
+        self.data['mime_type'] = '{}{}'.format(self.type_prefix, file_type)
 
     @property
     def parents(self):
@@ -271,7 +266,7 @@ class File(GoogleObject):
 
         return self.client.copy_file(self.id, new)
 
-    def list_permissions(self):
+    def permissions(self):
         return [Permission(self, **each) for each in self._permissions]
 
     def add_permission(self, email, **kwargs):
@@ -332,12 +327,12 @@ class Permission(GoogleObject):
 
         self.file = file
 
-        self.email = kwargs.get('email', '')
+        # self.email = kwargs.get('email', '')
         self.role = kwargs.pop('role', self._default_role)
         self.type = kwargs.pop('type', self._default_type)
 
         # initalize the other properties
-        super(self.__class__, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @classmethod
     def from_existing(cls, data, file):
@@ -370,11 +365,11 @@ class Permission(GoogleObject):
 
     @property
     def email(self):
-        return self._email_address
+        return self.data['emailAddress']
 
     @email.setter
     def email(self, value):
         # TODO:
         #     add update call if _id is present
         if len(value.split('@')) is 2:
-            self._email_address = value
+            self.data['emailAddress'] = value
