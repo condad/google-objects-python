@@ -10,7 +10,6 @@ Google Sheets API
 import logging
 
 from .. import GoogleClient, GoogleObject
-from ..utils import keys_to_snake
 
 log = logging.getLogger(__name__)
 
@@ -130,7 +129,7 @@ class SheetsClient(GoogleClient):
             range=range_name
         ).execute()
 
-        return Block.from_existing(data, client=self)
+        return Block.from_existing(data, self)
 
     def update_values(self, spreadsheet_id, range_name, values, format='RAW'):
         data = self.resource.spreadsheets().values().update(
@@ -180,11 +179,11 @@ class Spreadsheet(GoogleObject):
         self.__updates = []
 
         # initalize the other properties
-        super(self.__class__, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @property
     def id(self):
-        return self.data['spreadsheet_id']
+        return self.data['spreadsheetId']
 
     @property
     def title(self):
@@ -244,8 +243,8 @@ class Spreadsheet(GoogleObject):
         def set_sheet_id(rng):
             """If sheet_id isn't present, set it to the ID of the first sheet.
             """
-            if 'sheet_id' not in rng['range']:
-                rng['range']['sheet_id'] = 0
+            if 'sheetId' not in rng['range']:
+                rng['range']['sheetId'] = 0
 
             return rng
 
@@ -291,8 +290,8 @@ class NamedRange(object):
 
     @property
     def sheet_id(self):
-        if 'sheet_id' in self.range:
-            return self.range['sheet_id']
+        if 'sheetId' in self.range:
+            return self.range['sheetId']
 
     @property
     def sheet_name(self):
@@ -345,18 +344,9 @@ class Sheet(GoogleObject):
     def __init__(self, spreadsheet=None, **kwargs):
         """Creates a new Sheet Object"""
         self.spreadsheet = spreadsheet
+        # self.properties = kwargs.get('properties', {})
 
-        # initalize the other properties
-        super(self.__class__, self).__init__(**kwargs)
-
-        self.properties = kwargs.get('properties', {})
-
-    @classmethod
-    def from_existing(cls, data, spreadsheet):
-        """initiates using existing Sheet resource"""
-
-        new_data = keys_to_snake(data)
-        return cls(spreadsheet, **new_data)
+        super().__init__(**kwargs)
 
     @property
     def properties(self):
@@ -364,15 +354,15 @@ class Sheet(GoogleObject):
 
     @properties.setter
     def properties(self, value):
-        if 'sheet_id' in value:
-            self.properties['sheet_id'] = value['sheet_id']
+        if 'sheetId' in value:
+            self.properties['sheetId'] = value['sheetId']
 
         if 'title' in value:
             self.properties['title'] = value['title']
 
     @property
     def id(self):
-        return self.properties.get('sheet_id')
+        return self.properties.get('sheetId')
 
     @property
     def title(self):
@@ -407,14 +397,7 @@ class Block(GoogleObject):
         self.spreadsheet = spreadsheet
 
         # initalize the other properties
-        super(self.__class__, self).__init__(**kwargs)
-
-    @classmethod
-    def from_existing(cls, data, client, spreadsheet=None):
-        """initiates using existing ValueRange resource"""
-
-        new_data = keys_to_snake(data)
-        return cls(client, spreadsheet, **new_data)
+        super().__init__(**kwargs)
 
     def __iter__(self):
         return self.yield_rows()

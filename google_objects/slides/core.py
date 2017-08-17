@@ -12,7 +12,6 @@ import functools
 
 from google_objects.slides import updates
 from google_objects import GoogleClient, GoogleObject
-from google_objects.utils import keys_to_snake, set_private_attrs
 
 log = logging.getLogger(__name__)
 
@@ -95,9 +94,8 @@ class Presentation(GoogleObject):
         """
         self.client = client
         self.__updates = []
-        self.data = kwargs
 
-        # super(Presentation, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @classmethod
     def from_existing(cls, data, *args):
@@ -192,8 +190,7 @@ class Page(GoogleObject):
 
     def __init__(self, presentation=None, **kwargs):
         self.presentation = presentation
-        self.data = kwargs
-        # super(Page, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @property
     def id(self):
@@ -299,8 +296,8 @@ class PageElement(GoogleObject):
     def __init__(self, presentation=None, page=None, **kwargs):
         self.presentation = presentation
         self.page = page
-        self.data = kwargs
-        # super(PageElement, self).__init__(**kwargs)
+
+        super().__init__(**kwargs)
 
     @property
     def id(self):
@@ -330,11 +327,10 @@ class Shape(PageElement):
     """Docstring for Shape."""
 
     def __init__(self, presentation=None, page=None, **kwargs):
-        # set private attrs not done by base class
-        shape = kwargs.pop('shape')
-        set_private_attrs(self, shape)
+        super().__init__(presentation, page, **kwargs)
 
-        super(Shape, self).__init__(presentation, page, **kwargs)
+        shape = kwargs.pop('shape')
+        self.data.update(shape)
 
     @property
     def text(self):
@@ -360,10 +356,10 @@ class Table(PageElement):
     #     that works in tandem with corresponding cells
 
     def __init__(self, presentation=None, page=None, **kwargs):
-        table = kwargs.pop('table')
-        set_private_attrs(self, table)
+        super().__init__(presentation, page, **kwargs)
 
-        super(Table, self).__init__(presentation, page, **kwargs)
+        table = kwargs.pop('table')
+        self.data.update(table)
 
     def __iter__(self):
         return self.cells()
@@ -388,7 +384,7 @@ class Table(PageElement):
 
         def __init__(self, table, **kwargs):
             self.table = table
-            super(Table.Cell, self).__init__(**kwargs)
+            super().__init__(**kwargs)
 
         @property
         def text(self):
@@ -427,8 +423,8 @@ class TextContent(GoogleObject):
         self.presentation = presentation
         self.page = page
         self.element = element
-        self.data = kwargs
-        # super(TextContent, self).__init__(**kwargs)
+
+        super().__init__(**kwargs)
 
     def yield_elements(self):
         for text_element in self.data['textElements']:
@@ -454,7 +450,6 @@ class TextElement(GoogleObject):
     def __init__(self, text_content, page_element, **kwargs):
         self.text_content = text_content
         self.page_element = page_element
-        self.data = kwargs
 
         # set update partials
         self.delete_text = functools.partial(
@@ -470,7 +465,7 @@ class TextElement(GoogleObject):
             start=self.start_index
         )
 
-        # super(TextContent.TextElement, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @property
     def start_index(self):

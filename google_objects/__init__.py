@@ -5,8 +5,6 @@ import logging
 from apiclient import discovery
 
 from google_objects.auth import service_account_creds
-from google_objects.utils import set_private_attrs
-from google_objects.utils import keys_to_snake, keys_to_camel
 
 # sets default logging handler to avoid "No handler found" warnings.
 try:
@@ -66,8 +64,7 @@ class GoogleObject(object):
         """Set Resource corresponding **kwargs
         to private attributes.
         """
-        self.data = keys_to_snake(kwargs)
-        set_private_attrs(self, kwargs)
+        self.data = kwargs
 
     @classmethod
     def from_existing(cls, data, *args):
@@ -77,7 +74,7 @@ class GoogleObject(object):
         """convert __dict__ keys to camel case, get
         intersection of this and _properties
         """
-        return keys_to_camel(self.data)
+        return self.data
 
 
 from .drive.core import DriveClient

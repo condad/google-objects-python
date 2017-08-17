@@ -11,15 +11,8 @@ import uuid
 import logging
 
 from .. import GoogleClient, GoogleObject
-from ..utils import keys_to_snake, keys_to_camel
 
 log = logging.getLogger(__name__)
-
-
-# TODO:
-    # i/ add greater permissions functionality
-    # ii/ change .from_existing to .from_raw
-    # add SKELETON to set attributes to null when not set
 
 
 class DriveClient(GoogleClient):
@@ -125,11 +118,11 @@ class DriveClient(GoogleClient):
             'type': type,
             'address': callback or self.callback
         }
-        result = self.resource.files().watch(
+        resp = self.resource.files().watch(
             fileId=file_id, body=req_body
         ).execute()
 
-        return keys_to_snake(result)
+        return resp
 
     def create_permission(self, file_id,
                           permission, message=None, notification=True):
@@ -207,7 +200,7 @@ class File(GoogleObject):
         self.__updates = []
 
         # initalize the other properties
-        super(self.__class__, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @property
     def id(self):
@@ -223,15 +216,15 @@ class File(GoogleObject):
 
     @property
     def url(self):
-        return self.data['web_view_link']
+        return self.data['webViewLink']
 
     @property
     def type_prefix(self):
-        return self.data['type_prefix']
+        return self.data['typePrefix']
 
     @property
     def type(self):
-        return self.data['mime_type']
+        return self.data['mimeType']
 
     @type.setter
     def type(self, value):
@@ -244,15 +237,15 @@ class File(GoogleObject):
         if value not in self._types:
             raise ValueError
 
-        self.data['mime_type'] = '{}{}'.format(self.type_prefix, file_type)
+        self.data['mimeType'] = '{}{}'.format(self.type_prefix, file_type)
 
     @property
     def parents(self):
-        return self._parents
+        return self.data['parents']
 
     @parents.setter
     def parents(self, value):
-        self._parents = value
+        self.data['parents'] = value
 
     def copy(self, name=None, parents=[]):
         """Copies self, optionally altering
@@ -267,7 +260,7 @@ class File(GoogleObject):
         return self.client.copy_file(self.id, new)
 
     def permissions(self):
-        return [Permission(self, **each) for each in self._permissions]
+        return [Permission(self, **each) for each in self.data['permissions']]
 
     def add_permission(self, email, **kwargs):
         """initializes new permission objects and
@@ -290,7 +283,7 @@ class File(GoogleObject):
 
         return created
 
-    def start_watching(self, **kwargs):
+    def watch(self, **kwargs):
         """Attempts to start receiving push notifications for this file.
 
         :channel_id: UUID
@@ -317,51 +310,36 @@ class Permission(GoogleObject):
     # constructors
 
     def __init__(self, file=None, **kwargs):
-
         """Initialize Permission Object
 
         :data: <Dict> of Permission file data
         :level: one of reader, commenter, writer, or owner
 
         """
-
         self.file = file
-
-        # self.email = kwargs.get('email', '')
-        self.role = kwargs.pop('role', self._default_role)
-        self.type = kwargs.pop('type', self._default_type)
-
-        # initalize the other properties
         super().__init__(**kwargs)
-
-    @classmethod
-    def from_existing(cls, data, file):
-        """initiates existing permissions object"""
-
-        new_data = keys_to_snake(data)
-        return cls(file, **new_data)
 
     @property
     def id(self):
-        return self._id
+        return self.data['id']
 
     @property
     def role(self):
-        return self._role
+        return self.data.get('role', self._default_role)
 
     @role.setter
     def role(self, value):
         if value in self._role_levels:
-            self._role = value
+            self.data['role'] = value
 
     @property
     def type(self):
-        return self._type
+        return self.data.get('type', self._default_type)
 
     @type.setter
     def type(self, value):
         if value in self._type_levels:
-            self._type = value
+            self.data['type'] = value
 
     @property
     def email(self):
