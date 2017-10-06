@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import os
 import logging
 
 from apiclient import discovery
@@ -44,6 +45,7 @@ class GoogleClient(object):
                              creds_path=None, user=None, scope=[]):
         """Authorizes a client from an Service Account Credential File."""
 
+        creds_path = creds_path or os.getenv('GOOGLE_SERVICE_ACCOUNT')
         if not creds_path:
             err = 'Please provide an a path to your service credentals.'
             raise ValueError(err)

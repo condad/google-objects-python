@@ -8,25 +8,21 @@ Google Sheets API
 """
 
 import logging
+from datetime import datetime
 
 from .. import GoogleClient, GoogleObject
 
 log = logging.getLogger(__name__)
 
 
-# TODO:
-    # i/ ensure all cell data reflects table row insertion and deletion
-    # ii/ page title and descriptor need to be found and initialized
-    # iii/ change .from_existing to .from_raw
-
-
 def _value_to_cell(val):
-    if val.isdigit():
+    if str(val).isdigit():
         try:
             return {'userEnteredValue': {'numberValue': float(val)}}
         except:
             return {'userEnteredValue': {'numberValue': int(val)}}
-    return {'userEnteredValue': {'stringValue': val}}
+
+    return {'userEnteredValue': {'stringValue': str(val)}}
 
 
 def _cells_to_row(cells):
@@ -34,7 +30,7 @@ def _cells_to_row(cells):
 
 
 def _format_sheet(sheet):
-    title = sheet.get('title', 'NEW SHEET')
+    title = sheet.get('title')
     values = sheet.get('values', [])
     return {
         'properties': {
@@ -65,12 +61,13 @@ class SheetsClient(GoogleClient):
 
     """Creates a Google Sheets Resource"""
 
+    service = 'sheets'
+    version = 'v4'
+
     @classmethod
     def from_service_account(cls, **kwargs):
         kwargs['scope'] = ['spreadsheets']
-        kwargs['service'] = 'sheets'
-        kwargs['version'] = 'v4'
-        return super().from_service_account(**kwargs)
+        return super().from_service_account(cls.service, cls.version, **kwargs)
 
     def get_spreadsheet(self, id):
         """Returns a Spreadsheet Object
@@ -94,7 +91,7 @@ class SheetsClient(GoogleClient):
         :returns: Spreadsheet
 
         """
-        self.create_spreadsheet_from_dataframes([frame], **options)
+        return self.create_spreadsheet_from_dataframes(frame, **options)
 
     def create_spreadsheet_from_dataframes(self, *frames, **options):
         """Creates a new Google Spreadsheet with a provided pandas.DataFrame
@@ -107,19 +104,31 @@ class SheetsClient(GoogleClient):
         """
         if not frames:
             raise ValueError
+        
+        time = datetime.now().strftime("%I:%M%p on %B %d, %Y") 
+        title = options.get('Title', 'Generated at {}'.format(time))
+        sheets = []
 
-        formatted_frames = [frm.values.tolist() for frm in frames]
-        return self.create_spreadsheet(self, formatted_frames, **options)
+        for frame in frames:
+            # insert header as first row
+            head, data = frame.columns, frame.values.tolist()
+            data.insert(0, head)
+
+            # format as google sheet dict
+            sheet = _format_sheet({'title': title, 'values': data})
+            sheets.append(sheet)
+
+        return self.create_spreadsheet(sheets, title=title, **options)
 
     def create_spreadsheet(self, sheets=[], **kwargs):
         data = self.resource.spreadsheets().create(
             body={
                 'properties': kwargs,
-                'sheets': [_format_sheet(s) for s in sheets]
+                'sheets': sheets
             }
         ).execute()
 
-        return Spreadsheet.from_existing(data, self)
+        return Spreadsheet(self, **data)
 
     def get_values(self, spreadsheet_id, range_name):
         """Initialize a new block and return it"""
@@ -172,7 +181,7 @@ class Spreadsheet(GoogleObject):
 
     """Represents a Google API Spreadsheet object"""
 
-    def __init__(self, client=None, **kwargs):
+    def __init__(self, client, **kwargs):
         """Creates a new Spreadsheet Object"""
 
         self.client = client
