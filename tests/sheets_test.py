@@ -1,6 +1,8 @@
 import unittest
 from unittest import mock
 
+import pandas
+
 from tests.utils import get_data
 from google_objects.sheets.core import SheetsClient
 from google_objects.sheets.core import Spreadsheet
@@ -52,3 +54,9 @@ class TestSheets(unittest.TestCase):
 
         for row in values:
             self.assertIsInstance(row, list)
+
+    def test_frame(self):
+        spreadsheet = self.client.get_spreadsheet('abc123')
+        sheets = spreadsheet.sheets()
+        values = sheets[0].frame()
+        self.assertIsInstance(values, pandas.DataFrame)

@@ -10,6 +10,8 @@ Google Sheets API
 import logging
 from datetime import datetime
 
+import pandas
+
 from .. import GoogleClient, GoogleObject
 
 log = logging.getLogger(__name__)
@@ -227,6 +229,10 @@ class Spreadsheet(GoogleObject):
         for sheet in self.data['sheets']:
             yield Sheet.from_existing(sheet, self)
 
+    def yield_values(self, arg1):
+        for sheet in self.yield_sheets():
+            yield sheet.values()
+
     def get_range(self, sheet_range):
         """Takes a sheet range and initializes a block object
         with the raw data and the spreadsheet for update
@@ -392,7 +398,9 @@ class Sheet(GoogleObject):
         block.spreadsheet = self.spreadsheet
 
         return block
-
+    
+    def frame(self):
+        return self.values().as_df()
 
 class Block(GoogleObject):
 
@@ -437,6 +445,12 @@ class Block(GoogleObject):
 
     def rows(self):
         return [row for row in self.yield_rows()]
+
+    def as_df(self, header=True):
+        df = pandas.DataFrame(self.rows())
+        if header:
+            return df.rename(columns=df.iloc[0])
+        return df
 
     @property
     def values(self):
