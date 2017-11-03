@@ -402,6 +402,7 @@ class Sheet(GoogleObject):
     def frame(self):
         return self.values().as_df()
 
+
 class Block(GoogleObject):
 
     """Recieves a dictionary corresponding to a
@@ -449,8 +450,8 @@ class Block(GoogleObject):
     def as_df(self, header=True):
         df = pandas.DataFrame(self.rows())
         if header:
-            return df.rename(columns=df.iloc[0])
-        return df
+            df = df.rename(columns=df.iloc[0])
+        return df.iloc[1:]
 
     @property
     def values(self):
