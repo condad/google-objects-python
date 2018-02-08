@@ -2,10 +2,10 @@ import unittest
 from unittest import mock
 
 from tests.utils import get_data
-from google_objects.slides.core import SlidesClient
-from google_objects.slides.core import Presentation
-from google_objects.slides.core import Page
-from google_objects.slides.core import PageElement
+from google_objects.slides import SlidesClient
+from google_objects.slides import Presentation
+from google_objects.slides import Page
+from google_objects.slides import PageElement
 
 # load google sheets dummy data
 presentation = get_data('presentation')

@@ -12,7 +12,7 @@ from datetime import datetime
 
 import pandas
 
-from .. import GoogleClient, GoogleObject
+from google_objects import GoogleClient, GoogleObject
 
 log = logging.getLogger(__name__)
 
@@ -466,3 +466,26 @@ class Block(GoogleObject):
 
     def __setitem__(self, key, item):
         self.values[key] = item
+
+
+def FORMAT_ROW(sheet_id, start, end, rgba):
+    return {
+        "repeatCell": {
+            "range": {
+                "sheetId": sheet_id,
+                "startRowIndex": start,
+                "endRowIndex": end
+            },
+            "cell": {
+                "userEnteredFormat": {
+                    "backgroundColor": {
+                        "red": rgba[0],
+                        "green": rgba[1],
+                        "blue": rgba[2],
+                        'alpha': rgba[3]
+                    }
+                }
+            },
+            "fields": "userEnteredFormat(backgroundColor)"
+        }
+    }

@@ -10,7 +10,7 @@ Google Drive API
 import uuid
 import logging
 
-from .. import GoogleClient, GoogleObject
+from google_objects import GoogleClient, GoogleObject
 
 log = logging.getLogger(__name__)
 

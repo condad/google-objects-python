@@ -79,6 +79,6 @@ class GoogleObject(object):
         return self.data
 
 
-from .drive.core import DriveClient
-from .sheets.core import SheetsClient
-from .slides.core import SlidesClient
+from .drive import DriveClient
+from .sheets import SheetsClient
+from .slides import SlidesClient

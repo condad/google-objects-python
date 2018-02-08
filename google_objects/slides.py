@@ -10,7 +10,6 @@ Google Slides API
 import logging
 import functools
 
-from google_objects.slides import updates
 from google_objects import GoogleClient, GoogleObject
 
 log = logging.getLogger(__name__)
@@ -156,7 +155,7 @@ class Presentation(GoogleObject):
         """Add update request for presentation-wide
         replacement with arg:find to arg:replace
         """
-        ud = updates.REPLACE_ALL_TEXT(str(find), str(replace), case_sensitive)
+        ud = REPLACE_ALL_TEXT(str(find), str(replace), case_sensitive)
         self.add_update(ud)
 
     def get_element_by_id(self, element_id):
@@ -318,7 +317,7 @@ class PageElement(GoogleObject):
         """Adds deleteObject request to
         presentation updates list.
         """
-        ud = updates.DELETE_OBJECT(self.data.id)
+        ud = DELETE_OBJECT(self.data.id)
         self.presentation.add_update(ud)
 
 
@@ -453,14 +452,14 @@ class TextElement(GoogleObject):
 
         # set update partials
         self.delete_text = functools.partial(
-            updates.DELETE_TEXT,
+            DELETE_TEXT,
             row=getattr(self.page_element, 'startIndex', None),
             col=getattr(self.page_element, 'endIndex', None),
             start=self.startIndex,
             end=self.end_index
         )
         self.insert_text = functools.partial(
-            updates.INSERT_TEXT,
+            INSERT_TEXT,
             obj_id=self.id,
             start=self.start_index
         )
@@ -491,7 +490,7 @@ class TextElement(GoogleObject):
     @text.setter
     def text(self, value):
         if not self.data.text:
-            ud = updates.DELETE_TEXT(
+            ud = DELETE_TEXT(
                 self.page_element.id,
                 row=getattr(self.page_element, 'startIndex', None),
                 col=getattr(self.page_element, 'endIndex', None),
@@ -500,7 +499,7 @@ class TextElement(GoogleObject):
             )
             self.page_element.update(ud)
 
-        update_request = updates.INSERT_TEXT(
+        update_request = INSERT_TEXT(
             value, self.id, start=self.start_index
         )
         self.page_element.update(update_request)
@@ -510,10 +509,63 @@ class TextElement(GoogleObject):
     @text.deleter
     def text(self):
         obj_id = self.page_element.id
-        update_request = updates.DELETE_TEXT(
+        update_request = DELETE_TEXT(
             obj_id, start=self.start_index, end=self.end_index
         )
         self.page_element.update(update_request)
 
     def __str__(self):
         return self.text
+
+
+def DELETE_OBJECT(obj_id):
+    return {
+        'deleteObject': {
+            'objectId': obj_id
+        }
+    }
+
+
+def REPLACE_ALL_TEXT(find, replace, case_sensitive=False):
+    return {
+        'replaceAllText': {
+            'replaceText': replace,
+            'containsText': {
+                'text': find,
+                'matchCase': case_sensitive
+            }
+        }
+    }
+
+
+def INSERT_TEXT(text, obj_id=None, row=None, column=None, start=0):
+    return {
+        'insertText': {
+            'objectId': obj_id,
+            'text': text,
+            'cellLocation': {
+                'rowIndex': row,
+                'columnIndex': column
+            },
+            'insertionIndex': start
+
+        }
+    }
+
+
+def DELETE_TEXT(obj_id, row=None,
+                col=None, start=None, end=None, kind='FIXED_RANGE'):
+    return {
+        'deleteText': {
+            'objectId': obj_id,
+            'cellLocation': {
+                'rowIndex': row,
+                'columnIndex': col
+            },
+            'text_range': {
+                'startIndex': start,
+                'endIndex': end
+
+            },
+        }
+    }

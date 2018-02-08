@@ -2,10 +2,10 @@ import unittest
 from unittest import mock
 
 from tests.utils import get_data
-from google_objects.drive.core import DriveClient
-from google_objects.drive.core import About
-from google_objects.drive.core import File
-from google_objects.drive.core import Permission
+from google_objects.drive import DriveClient
+from google_objects.drive import About
+from google_objects.drive import File
+from google_objects.drive import Permission
 
 # load google sheets dummy data
 about = get_data('about')

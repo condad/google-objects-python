@@ -22,6 +22,7 @@ setup(
     install_requires=requires,
     setup_requires=setup_requirements,
     tests_require=test_requirements,
+    scripts=['bin/fetch-sheet'],
     url='https://github.com/condad/google-objects',
     download_url='https://github.com/condad/google-objects/tarball/' + version,
     keywords=['google', 'api', 'wrapper'],

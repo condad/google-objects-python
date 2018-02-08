@@ -4,10 +4,10 @@ from unittest import mock
 import pandas
 
 from tests.utils import get_data
-from google_objects.sheets.core import SheetsClient
-from google_objects.sheets.core import Spreadsheet
-from google_objects.sheets.core import Sheet
-from google_objects.sheets.core import Block
+from google_objects.sheets import SheetsClient
+from google_objects.sheets import Spreadsheet
+from google_objects.sheets import Sheet
+from google_objects.sheets import Block
 
 # load google sheets dummy data
 spreadsheet = get_data('spreadsheet')
