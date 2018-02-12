@@ -15,3 +15,5 @@ env.sh
 Pipfile
 Pipfile.lock
 .venv/
+.eggs/
+*.egg-info/

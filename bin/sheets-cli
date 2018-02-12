@@ -29,9 +29,14 @@ class SheetFetcher(object):
             self.client = SheetsClient.from_service_account()
             self.spreadsheet = self.client.get_spreadsheet(spreadsheet)
 
-    def sheet(self, sheet='Sheet1'):
+    def get(self, sheet='Sheet1'):
+        """Return a Google Sheet as a list of dictionaries in the 'records' attribute
+        of the outputted json"""
+
         sheet = self.spreadsheet.get_sheet_by_name(sheet)
         dataframe = sheet.frame()
+
+        records = dataframe.to
 
         print(dataframe.to_json(orient='records'))
         

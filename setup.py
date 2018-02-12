@@ -7,7 +7,7 @@ if sys.argv[-1] == 'test':
     sys.exit(0)
 
 version = '0.0.3'
-requires = ['google-api-python-client>=1.5.3']
+requires = ['google-api-python-client>=1.5.3', 'pandas>=0.22.0']
 setup_requirements = ['pytest-runner>=2.0']
 test_requirements = ['pytest>=2.8.0']
 
@@ -22,7 +22,7 @@ setup(
     install_requires=requires,
     setup_requires=setup_requirements,
     tests_require=test_requirements,
-    scripts=['bin/fetch-sheet'],
+    scripts=['bin/sheets-cli'],
     url='https://github.com/condad/google-objects',
     download_url='https://github.com/condad/google-objects/tarball/' + version,
     keywords=['google', 'api', 'wrapper'],
