@@ -12,7 +12,8 @@ from datetime import datetime
 
 import pandas
 
-from google_objects import GoogleClient, GoogleObject
+from google_objects.core import GoogleClient
+from google_objects.core import GoogleObject
 
 log = logging.getLogger(__name__)
 
@@ -70,6 +71,10 @@ class SheetsClient(GoogleClient):
     def from_service_account(cls, **kwargs):
         kwargs['scope'] = ['spreadsheets']
         return super().from_service_account(cls.service, cls.version, **kwargs)
+
+    @classmethod
+    def from_api_key(cls, key, **kwargs):
+        return super().from_api_key(cls.service, cls.version, key)
 
     def get_spreadsheet(self, id):
         """Returns a Spreadsheet Object
@@ -223,7 +228,7 @@ class Spreadsheet(GoogleObject):
             if name == sheet.title:
                 return sheet
 
-        raise ValueError
+        raise ValueError('Sheet with provided name not found.')
 
     def yield_sheets(self):
         for sheet in self.data['sheets']:

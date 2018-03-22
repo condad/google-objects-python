@@ -5,18 +5,19 @@ import logging
 
 import fire
 
-from google_objects import SheetsClient
+from google_objects.sheets import SheetsClient
 
 log = logging.getLogger(__name__)
 
 
-class SheetFetcher(object):
+class SheetsCLI(object):
 
     """Command line tool for fetching tabular data
     and redirecting it to STDOUT."""
 
     def __init__(self, spreadsheet=None, key=None):
         """Authenticate the Google API Client and loads the Specified Spreadsheet"""
+
         if not spreadsheet:
             raise ValueError("Spreadsheet argument required.")
 
@@ -26,8 +27,11 @@ class SheetFetcher(object):
         if key:
             self.client = SheetsClient.from_api_key(key)
         else:
-            self.client = SheetsClient.from_service_account()
-            self.spreadsheet = self.client.get_spreadsheet(spreadsheet)
+            err_msg = "Valid API Key required, as argument or env variable set to GOOGLE_SHEETS_API_KEY."
+            raise ValueError(err_msg)
+            #  self.client = SheetsClient.from_service_account()
+
+        self.spreadsheet = self.client.get_spreadsheet(spreadsheet)
 
     def get(self, sheet='Sheet1'):
         """Return a Google Sheet as a list of dictionaries in the 'records' attribute
@@ -36,10 +40,8 @@ class SheetFetcher(object):
         sheet = self.spreadsheet.get_sheet_by_name(sheet)
         dataframe = sheet.frame()
 
-        records = dataframe.to
-
         print(dataframe.to_json(orient='records'))
-        
 
-if __name__ == "__main__":
-    fire.Fire(SheetFetcher)
+
+def main():
+    fire.Fire(SheetsCLI)

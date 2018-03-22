@@ -5,7 +5,8 @@ import httplib2
 
 _SCOPES = {
     'drive',
-    'spreadsheets'
+    'spreadsheets',
+    'slides'
 }
 
 
