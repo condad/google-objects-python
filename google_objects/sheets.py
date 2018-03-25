@@ -7,6 +7,7 @@ Google Sheets API
 
 """
 
+import os
 import logging
 from datetime import datetime
 
@@ -16,6 +17,9 @@ from google_objects.core import GoogleClient
 from google_objects.core import GoogleObject
 
 log = logging.getLogger(__name__)
+
+ENV_VARIABLE_NAME = 'GOOGLE_API_KEY'
+ENV_SERVICE_ACCOUNT = 'GOOGLE_API_KEY'
 
 
 def _value_to_cell(val):
@@ -66,15 +70,7 @@ class SheetsClient(GoogleClient):
 
     service = 'sheets'
     version = 'v4'
-
-    @classmethod
-    def from_service_account(cls, **kwargs):
-        kwargs['scope'] = ['spreadsheets']
-        return super().from_service_account(cls.service, cls.version, **kwargs)
-
-    @classmethod
-    def from_api_key(cls, key, **kwargs):
-        return super().from_api_key(cls.service, cls.version, key)
+    scope = {'spreadsheets',}
 
     def get_spreadsheet(self, id):
         """Returns a Spreadsheet Object
@@ -174,7 +170,7 @@ class SheetsClient(GoogleClient):
             body={'values': values}
         ).execute()
 
-        return Block.from_existing(data, client=self)
+        return Block.from_existing(data, self)
 
     def push_updates(self, spreadsheet_id, updates):
         spreadsheets = self.resource.spreadsheets()
@@ -404,8 +400,18 @@ class Sheet(GoogleObject):
 
         return block
     
-    def frame(self):
-        return self.values().as_df()
+    def dataframe(self, join_column_labels=False, header_row=0):
+        values = self.values().rows()
+        header, data = values[header_row], values[header_row +1:]
+
+        df = pandas.DataFrame(data)
+
+        if join_column_labels:
+            df.columns = ['_'.join(lb.lower().split()) for lb in header]
+        else:
+            df.columns = header
+
+        return df
 
 
 class Block(GoogleObject):
@@ -451,12 +457,6 @@ class Block(GoogleObject):
 
     def rows(self):
         return [row for row in self.yield_rows()]
-
-    def as_df(self, header=True):
-        df = pandas.DataFrame(self.rows())
-        if header:
-            df = df.rename(columns=df.iloc[0])
-        return df.iloc[1:]
 
     @property
     def values(self):

@@ -58,5 +58,5 @@ class TestSheets(unittest.TestCase):
     def test_frame(self):
         spreadsheet = self.client.get_spreadsheet('abc123')
         sheets = spreadsheet.sheets()
-        values = sheets[0].frame()
+        values = sheets[0].dataframe()
         self.assertIsInstance(values, pandas.DataFrame)

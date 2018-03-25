@@ -24,12 +24,9 @@ class DriveClient(GoogleClient):
     callback: receving webook URL.
     """
 
-    @classmethod
-    def from_service_account(cls, **kwargs):
-        kwargs['scope'] = ['drive']
-        kwargs['service'] = 'drive'
-        kwargs['version'] = 'v3'
-        return super().from_service_account(**kwargs)
+    service = 'drive'
+    version = 'v3'
+    scope = {'drive'}
 
     def get_about(self, fields=['user']):
         data = self.resource.about().get(

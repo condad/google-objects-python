@@ -18,6 +18,9 @@ except ImportError:
 
 logging.getLogger(__name__).addHandler(NullHandler())
 
+ENV_API_KEY = 'GOOGLE_API_KEY'
+ENV_SERVICE_ACCOUNT = 'GOOGLE_SERVICE_ACCOUNT_PATH'
+
 
 class GoogleClient(object):
 
@@ -27,31 +30,36 @@ class GoogleClient(object):
 
     """
 
+    service = None
+    version = None
+    scope = {}
+
     def __init__(self, resource=None):
         self.resource = resource
 
     @classmethod
-    def from_api_key(cls, service, version, api_key):
+    def from_api_key(cls, api_key=None):
         """Authorizes a client from an Api Key."""
 
-        if not api_key:
-            raise ValueError('Please provide an API Key.')
+        api_key = api_key or os.getenv(ENV_API_KEY)
 
-        resource = discovery.build(service, version, developerKey=api_key)
+        if not api_key:
+            raise ValueError('API Key not provided.')
+
+        resource = discovery.build(cls.service, cls.version, developerKey=api_key)
         return cls(resource)
 
     @classmethod
-    def from_service_account(cls, service, version,
-                             creds_path=None, user=None, scope=[]):
+    def from_service_account(cls, creds_path=None, user=None):
         """Authorizes a client from an Service Account Credential File."""
 
-        creds_path = creds_path or os.getenv('GOOGLE_SERVICE_ACCOUNT')
-        if not creds_path:
-            err = 'Please provide an a path to your service credentals.'
-            raise ValueError(err)
+        creds_path = creds_path or os.getenv(ENV_SERVICE_ACCOUNT)
 
-        http_client = service_account_creds(creds_path, user, scope=scope)
-        resource = discovery.build(service, version, http=http_client)
+        if not creds_path:
+            raise ValueError('Service Account path not provided.')
+
+        http_client = service_account_creds(creds_path, user, scope=cls.scope)
+        resource = discovery.build(cls.service, cls.version, http=http_client)
         return cls(resource)
 
 
@@ -62,7 +70,7 @@ class GoogleObject(object):
     values.
     """
 
-    def __init__(self, **kwargs):
+    def __init__(self, *args, **kwargs):
         """Set Resource corresponding **kwargs
         to private attributes.
         """

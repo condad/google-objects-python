@@ -28,12 +28,9 @@ class SlidesClient(GoogleClient):
     are handled by its <Presentation> object.
     """
 
-    @classmethod
-    def from_service_account(cls, **kwargs):
-        kwargs['scope'] = ['slides']
-        kwargs['service'] = 'slides'
-        kwargs['version'] = 'v1'
-        return super().from_service_account(**kwargs)
+    service = 'slides'
+    version = 'v1'
+    scope = {'slides'}
 
     def get_presentation(self, presentation_id):
         """Returns a Presentation Object
