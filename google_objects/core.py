@@ -7,16 +7,8 @@ from apiclient import discovery
 
 from google_objects.auth import service_account_creds
 
-# sets default logging handler to avoid "No handler found" warnings.
-try:
-    # for Python 2.7+
-    from logging import NullHandler
-except ImportError:
-    class NullHandler(logging.Handler):
-        def emit(self, record):
-            pass
+log = logging.getLogger(__name__)
 
-logging.getLogger(__name__).addHandler(NullHandler())
 
 ENV_API_KEY = 'GOOGLE_API_KEY'
 ENV_SERVICE_ACCOUNT = 'GOOGLE_SERVICE_ACCOUNT_PATH'
