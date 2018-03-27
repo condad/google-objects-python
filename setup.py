@@ -16,6 +16,10 @@ if sys.argv[-1] == 'test':
     os.system('python -sm unittest discover tests "*_test.py"')
     sys.exit(0)
 
+if sys.argv[-1] == 'publish':
+    os.system('python setup.py sdist')
+    os.system('twine upload dist/*')
+    sys.exit(0)
 
 VERSION = '0.0.4'
 REQUIRES = ['google-api-python-client>=1.5.3', 'pandas>=0.22.0', 'fire>=0.1.3']
