@@ -19,7 +19,7 @@ from google_objects.core import GoogleObject
 log = logging.getLogger(__name__)
 
 ENV_VARIABLE_NAME = 'GOOGLE_API_KEY'
-ENV_SERVICE_ACCOUNT = 'GOOGLE_API_KEY'
+ENV_SERVICE_ACCOUNT = 'GOOGLE_SERVICE_ACCOUNT'
 
 
 def _value_to_cell(val):
@@ -473,7 +473,7 @@ class Block(GoogleObject):
         self.values[key] = item
 
 
-def FORMAT_ROW(sheet_id, start, end, rgba):
+def format_row(sheet_id, start, end, rgba):
     return {
         "repeatCell": {
             "range": {
