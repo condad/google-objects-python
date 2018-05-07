@@ -12,6 +12,7 @@ log = logging.getLogger(__name__)
 
 ENV_API_KEY = 'GOOGLE_API_KEY'
 ENV_SERVICE_ACCOUNT = 'GOOGLE_SERVICE_ACCOUNT_PATH'
+ENV_DELEGATED_USER = 'GOOGLE_DELEGATED_USER'
 
 
 class GoogleClient(object):
@@ -46,6 +47,7 @@ class GoogleClient(object):
         """Authorizes a client from an Service Account Credential File."""
 
         creds_path = creds_path or os.getenv(ENV_SERVICE_ACCOUNT)
+        user = user or os.getenv(ENV_DELEGATED_USER)
 
         if not creds_path:
             raise ValueError('Service Account path not provided.')

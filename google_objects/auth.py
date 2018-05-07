@@ -22,7 +22,7 @@ def service_account_creds(creds_path, delegated_user=None, scope=None):
     if not creds_path:
         creds_path = os.getenv('GOOGLE_SERVICE_ACCOUNT_CREDENTIALS')
     if not delegated_user:
-        user = os.getenv('GOOGLE_DELEGATED_USER')
+        delegated_user = os.getenv('GOOGLE_DELEGATED_USER')
 
     creds_path = os.path.expanduser(creds_path)
     creds = ServiceAccountCredentials.from_json_keyfile_name(
@@ -30,7 +30,7 @@ def service_account_creds(creds_path, delegated_user=None, scope=None):
     )
 
     # create delegated if user exists
-    if user:
-        creds = creds.create_delegated(user)
+    if delegated_user:
+        creds = creds.create_delegated(delegated_user)
 
     return creds.authorize(httplib2.Http())

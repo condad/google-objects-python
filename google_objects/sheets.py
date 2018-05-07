@@ -100,7 +100,7 @@ class SheetsClient(GoogleClient):
         """Creates a new Google Spreadsheet with a provided pandas.DataFrame
         objects and options.
 
-        :frame: pandas.DataFrame
+        :frame: <pandas.DataFrame>
         :**options: Google Spreadsheet initialization options
         :returns: Spreadsheet
 
@@ -201,6 +201,10 @@ class Spreadsheet(GoogleObject):
     def title(self):
         return self.data['properties']['title']
 
+    @property
+    def url(self):
+        return 'https://docs.google.com/spreadsheets/d/{}'.format(self.id)
+
     @title.setter
     def title(self, value):
         self.data['properties']['title'] = value
@@ -230,7 +234,7 @@ class Spreadsheet(GoogleObject):
         for sheet in self.data['sheets']:
             yield Sheet.from_existing(sheet, self)
 
-    def yield_values(self, arg1):
+    def yield_values(self):
         for sheet in self.yield_sheets():
             yield sheet.values()
 
