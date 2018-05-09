@@ -21,7 +21,7 @@ if sys.argv[-1] == 'publish':
     os.system('twine upload dist/*')
     sys.exit(0)
 
-VERSION = '0.0.5'
+VERSION = '0.0.7'
 REQUIRES = ['google-api-python-client>=1.5.3', 'pandas>=0.22.0', 'fire>=0.1.3']
 GITHUB_URL = 'https://github.com/condad/google-objects'
 

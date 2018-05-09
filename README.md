@@ -1,6 +1,6 @@
 # Google Objects
 Thin, pythonic OO wrapper around Google's "google-api-python-client" library.
-Currently supports Python 3+ :snake::snake::snake:
+Currently supports Python 3+
 
 ## Installation
 ```bash
@@ -12,7 +12,7 @@ Requires a valid Google API Credentials object from Google's excellent oauth2lib
  
 ### Google Drive v3
 
-- [x] Retrieve drive 'About' information:
+- Retrieve drive 'About' information:
 
 ```python
 from google_objects import DriveClient
@@ -29,7 +29,7 @@ print(about.photo)
 # ...
 ```
 
-- [x] List files in drive by type:
+- List files in drive by type:
 
 ```python
 files_by_type = {
@@ -49,7 +49,7 @@ for file in files_by_type['spreadsheets']:
 # ...
 ```
 
-- [x] Copy and share file:
+- Copy and share file:
 
 ```python
 file = gdrive.get_file('FILE_ID')
@@ -64,7 +64,7 @@ print(permission.role, permission.type, permission.email)
 
 ### Google Slides v1
 
-- [x] Retrieve presentation and loop through elements:
+- Retrieve presentation and loop through elements:
 
 ```python
 from google_objects import SlidesClient
@@ -81,7 +81,7 @@ for slide in presentation:
         # Shape, Table, etc
 ```
 
-- [x] Check text in shape:
+- Check text in shape:
 
 ```python
 shape = presentation.get_element_by_id('SHAPE_ID')
@@ -89,7 +89,7 @@ for segment in shape.text:
     print(segment.text)
 ```
 
-- [x] Batch update every cell in table:
+- Batch update every cell in table:
 
 ```python
 # use with to perform batch updates in block
@@ -104,7 +104,7 @@ with presentation as pres:
 
 ### Google Sheets v4
 
-- [x] Retrieve spreadsheet and loop through sheets:
+- Retrieve spreadsheet and loop through sheets:
 
 ```python
 from google_objects import SheetsClient
@@ -116,14 +116,14 @@ for sheet in spreadsheet:
     print(sheet.id, sheet.title)
 ```
 
-- [x] Get sheet by name and return its full block of values:
+- Get sheet by name and return its full block of values:
 
 ```python
 sheet = spreadsheet['Sheet 1']
 values = sheet.values() 
 ```
 
-- [x] Get named range value block:
+- Get named range value block:
 
 ```python
 named_ranges = spreadsheet.named_ranges('SHEET_NAME!A:C')
@@ -131,7 +131,7 @@ for rng in named_range:
     values = named_range.get_block()
 ```
 
-- [x] Update values block:
+- Update values block:
 
 ```python
 values = spreadsheet.get_range('SHEET_NAME!A:C')
@@ -146,7 +146,7 @@ values[2:5] = [[1,2,4], [4, 5, 6], [6, 7, 8]]
 values.update()
 ```
 
-- [x] Append to values block:
+- Append to values block:
 
 ```python
 to_append = [[1, 2, 3], [4, 5, 6]]
