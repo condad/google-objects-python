@@ -21,21 +21,21 @@ if sys.argv[-1] == 'publish':
     os.system('twine upload dist/*')
     sys.exit(0)
 
-VERSION = '0.0.4'
+VERSION = '0.0.5'
 REQUIRES = ['google-api-python-client>=1.5.3', 'pandas>=0.22.0', 'fire>=0.1.3']
-
+GITHUB_URL = 'https://github.com/condad/google-objects'
 
 setup(
     name='google_objects',
     packages=find_packages(),
     version=VERSION,
-    description="A simple OO wrapper around google's python API client",
+    description="A simple OO wrapper around Google's python API client",
     long_description=README,
     long_description_content_type='text/markdown',
     author='Connor Sullivan',
     author_email='sully4792@gmail.com',
     install_requires=REQUIRES,
-    url='https://github.com/condad/google-objects',
+    url=GITHUB_URL,
     download_url='https://github.com/condad/google-objects/tarball/' + VERSION,
     keywords=['google api', 'google sheets', 'google drive', 'google slides'],
     classifiers=[
