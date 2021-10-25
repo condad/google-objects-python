@@ -347,5 +347,5 @@ class Permission(GoogleObject):
     def email(self, value):
         # TODO:
         #     add update call if _id is present
-        if len(value.split('@')) is 2:
+        if len(value.split('@')) == 2:
             self.data['emailAddress'] = value
